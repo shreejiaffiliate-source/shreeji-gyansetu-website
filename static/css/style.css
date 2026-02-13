@@ -1,0 +1,408 @@
+:root {
+  --primary-blue: #0b4378;
+  --primary-green: #168e43;
+  --primary-cyan: #006da0;
+  --bg-light: #f8f9fa;
+  --text-dark: #2d3436;
+  --card-bg: #ffffff;
+  --border-color: #eee;
+}
+
+[data-theme="dark"] {
+  --bg-light: #121212;
+  --text-dark: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --border-color: #333;
+  --primary-blue: #2a7fd1; /* Adjusted for better visibility on dark */
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* --- Navbar & Navigation --- */
+.navbar {
+  background: var(--card-bg) !important;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.8rem 0;
+}
+
+.navbar-brand span {
+  color: var(--primary-blue) !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--text-dark);
+  margin: 0 12px;
+  font-weight: 600;
+  position: relative;
+  transition: 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--primary-cyan);
+}
+
+/* Hover underline effect */
+.navbar-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--primary-green);
+  transition: width 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover::after {
+  width: 100%;
+}
+
+/* --- Components --- */
+.hero-section {
+  background: linear-gradient(
+    135deg,
+    var(--primary-blue) 0%,
+    var(--primary-cyan) 100%
+  );
+  color: white;
+  padding: 80px 0;
+}
+
+.cat-item {
+  display: inline-block;
+  background: var(--card-bg);
+  padding: 10px 25px;
+  border-radius: 50px;
+  margin-right: 10px;
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-dark);
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.cat-item:hover,
+.cat-item.active {
+  background: var(--primary-green);
+  color: white !important;
+  border-color: var(--primary-green);
+}
+
+.course-card {
+  background: var(--card-bg);
+  border: none;
+  border-radius: 12px;
+  transition: 0.3s;
+  overflow: hidden;
+}
+
+.course-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.price-tag {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-green);
+}
+
+.btn-dark {
+  background-color: var(--primary-blue);
+  border: none;
+}
+
+/* Carousel Customization */
+.carousel-item img {
+  border-radius: 0 0 20px 20px; /* Slight curve at bottom like KGS */
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  width: 5%;
+}
+
+.carousel-indicators [data-bs-target] {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primary-green);
+}
+
+/* Ensure the hero section doesn't overlap text in dark mode */
+[data-theme="dark"] .carousel-inner {
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* 1. Change the card background to dark blue on hover */
+.category-tile:hover {
+  background-color: var(--primary-blue) !important;
+  transform: translateY(-5px); /* Adds a subtle lift effect */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: var(--primary-blue) !important;
+}
+
+/* 2. Force the Icon (i) to turn white on hover */
+.category-tile:hover i {
+  color: #ffffff !important;
+}
+
+/* 3. Force the Text (span) to turn white on hover */
+.category-tile:hover span {
+  color: #ffffff !important;
+}
+
+/* Add a smooth transition for the icon and text as well */
+.category-tile i,
+.category-tile span {
+  transition: color 0.3s ease;
+}
+
+/* Custom Navbar Toggler Styling */
+.navbar-toggler {
+  /* Uses your existing border-color variable */
+  border-color: var(--border-color);
+}
+
+/* This targets the actual icon lines */
+.navbar-toggler-icon {
+  /* Default Bootstrap icon is an SVG. We can use a filter to invert it 
+       or replace it with a CSS-variable-friendly version. */
+  filter: var(--toggler-filter);
+}
+
+/* Light Mode specific (Icon stays black/dark) */
+[data-theme="light"] {
+  --toggler-filter: invert(0);
+}
+
+/* Dark Mode specific (Icon turns white/light) */
+[data-theme="dark"] {
+  --toggler-filter: invert(1);
+}
+
+/* Optional: Change the border color on focus to match your brand green */
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.25rem rgba(22, 142, 67, 0.25);
+  border-color: var(--primary-green);
+}
+
+/* Ensure nav items have proper spacing next to search */
+.navbar-nav .nav-link {
+  padding-right: 0.5rem !important;
+  padding-left: 0.5rem !important;
+}
+
+/* Specific styling for the Search Input */
+.navbar .form-control:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 0.25rem rgba(22, 142, 67, 0.1);
+}
+
+/* Adjust the toggler color based on theme as requested earlier */
+.navbar-toggler-icon {
+  filter: var(--toggler-filter);
+}
+
+/* --- Search Bar Placeholder & Icon Colors --- */
+
+/* Targets the search input text and placeholder */
+.navbar input[type="search"] {
+  color: var(--text-dark); /* Main text color */
+}
+
+/* Specific styling for the placeholder text across different browsers */
+.navbar input[type="search"]::placeholder {
+  color: var(--text-dark);
+  opacity: 0.6; /* Makes it look like a placeholder */
+  transition: color 0.3s ease;
+}
+
+/* Targets the search icon inside the button */
+.navbar .fa-search {
+  color: var(--text-dark);
+  opacity: 0.7;
+  transition: color 0.3s ease;
+}
+
+/* Optional: Make the icon brighter/accented when the user clicks into the search box */
+.navbar input[type="search"]:focus + button .fa-search {
+  color: var(--primary-green);
+  opacity: 1;
+}
+
+/* --- Theme Variable Adjustments --- */
+[data-theme="light"] {
+  /* ... existing variables ... */
+  --border-color: #ddd;
+}
+
+[data-theme="dark"] {
+  /* ... existing variables ... */
+  --border-color: #444;
+}
+
+.text-muted {
+  color: var(--text-dark) !important;
+  opacity: 0.65; /* Mimics the muted look while staying adaptive */
+}
+
+/* --- Fix for Category Tiles --- */
+.category-tile {
+  transition: 0.3s;
+  /* Changed from hardcoded #f3f4ff to an adaptive variable */
+  background: var(--bg-light) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.category-tile span {
+  color: var(--text-dark) !important;
+}
+
+/* --- Adaptive Carousel Controls --- */
+
+/* Targets the actual arrow icons */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  /* Uses the filter variable we defined for the navbar toggler */
+  filter: var(--toggler-filter);
+  transition: filter 0.3s ease;
+}
+
+/* Enhances the control buttons for better visibility on images */
+.carousel-control-prev,
+.carousel-control-next {
+  opacity: 0.8;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  opacity: 1;
+}
+
+/* Optional: Add a subtle background circle to the arrows for better contrast */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(6, 0, 0, 0.1);
+  border-radius: 50%;
+  padding: 20px;
+  background-size: 60%;
+}
+
+/* Dark Mode adjustment for the background circle */
+[data-theme="light"] .carousel-control-prev-icon,
+[data-theme="light"] .carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Fix for Accordion Adaptive Colors --- */
+.accordion-button:not(.collapsed) {
+  background-color: var(--primary-blue) !important;
+  color: white !important;
+}
+
+.accordion-button::after {
+  /* This makes the arrow white in dark mode and dark in light mode */
+  filter: var(--toggler-filter);
+}
+
+.accordion-item {
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Ensure the course detail sidebar matches your existing card style */
+.course-card .card-body {
+  background: var(--card-bg);
+  color: var(--text-dark);
+}
+
+/* --- Fix for Footer Text and Links --- */
+footer h6 {
+  color: var(--text-dark) !important;
+}
+
+footer a.text-decoration-none {
+  color: var(--text-dark) !important;
+  opacity: 0.8;
+}
+
+footer a.text-decoration-none:hover {
+  color: var(--primary-green) !important;
+  opacity: 1;
+}
+
+/* --- Fix for Course Cards --- */
+.course-card .card-body h6 {
+  color: var(--text-dark);
+}
+
+/* --- Fix for Success Stories (Dark background section) --- */
+/* If the card-body is always .bg-dark, the text must stay white */
+.card-body.bg-dark.text-white p,
+.card-body.bg-dark.text-white h6 {
+  color: white !important;
+}
+
+.card-body.bg-dark.text-white p,
+.card-body.bg-dark.text-white h6 {
+  color: white !important;
+}
+
+/* Footer */
+
+footer {
+  background-color: var(--card-bg);
+  color: var(--text-dark);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+footer h6 {
+  color: var(--text-dark);
+}
+
+footer .text-muted {
+  /* Ensures muted text is still readable in dark mode */
+  color: var(--text-dark) !important;
+  opacity: 0.7;
+}
+
+footer a.text-muted {
+  color: var(--text-dark) !important;
+  opacity: 0.8;
+  transition: 0.3s;
+}
+
+footer a.text-muted:hover {
+  color: var(--primary-green) !important;
+  opacity: 1;
+}
+
+footer hr {
+  border-color: var(--border-color);
+  opacity: 0.2;
+}
+
+/* Ensure the logo text in the footer also adapts */
+footer .navbar-brand span {
+  color: var(--primary-blue) !important;
+}
+
+/* Mobile Responsive Fixes */
+@media (max-width: 991px) {
+  .navbar-collapse {
+    background: var(--card-bg);
+    margin-top: 15px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+      {% for slide in slides %}
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></button>
+      {% endfor %}
+    </div>
+
+    <div class="carousel-inner shadow-sm">
+      {% for slide in slides %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+          <a href="{{ slide.link }}"><img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="max-height: 450px; object-fit: contain;" /></a>
+        </div>
+      {% empty %}
+        <div class="carousel-item active">
+          <div class="hero-section text-center py-5">
+            <h1 class="display-4 fw-bold">Welcome to Shreeji GyanSetu</h1>
+            <p class="lead">Upload your first slider in the Admin panel to see it here!</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+  </div>
+
+  <section class="container mt-5">
+    <h4 class="fw-bold mb-4">Popular Courses</h4>
+    <div class="row g-4">
+      {% for course in popular_courses %}
+        <div class="col-md-3">
+          <a href="{% url 'course_detail' course.slug %}" class="text-decoration-none text-dark">
+            <div class="card course-card h-100 shadow-sm">
+              <img src="{{ course.thumbnail.url }}" class="card-img-top" style="height: 160px; object-fit: contain;" />
+              <div class="card-body p-3">
+                <h6 class="fw-bold">{{ course.title }}</h6>
+                <p class="text-success fw-bold">₹{{ course.price }}</p>
+                <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary btn-sm w-100">View Course</a>
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="container mt-5">
+    <h4 class="fw-bold mb-4">Popular Category</h4>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
+      {% for cat in categories %}
+        <div class="col">
+          <a a href="{% url 'category_detail' cat.slug %}" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm text-center py-5 category-tile">
+              <div class="mb-2">
+                <i class="fas {{ cat.icon_class }} fa-2x text-primary"></i>
+              </div>
+              <span class="small fw-bold text-dark">{{ cat.title }}</span>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="container mt-5 mb-5">
+    <h4 class="fw-bold mb-4">Success Stories</h4>
+    <div class="row g-4">
+      {% for story in success_stories %}
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <img src="{{ story.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" />
+            <div class="card-body bg-dark text-white text-center">
+              <h6 class="mb-0 small">{{ story.exam_name }} TOPPER</h6>
+              <p class="fw-bold mb-0">{{ story.name }} ({{ story.rank }})</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

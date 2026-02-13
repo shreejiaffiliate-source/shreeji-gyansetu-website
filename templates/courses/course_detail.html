@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-lg-8">
+        <h1 class="fw-bold mb-3" style="color: var(--text-dark);">{{ course.title }}</h1>
+        <p class="lead text-muted">{{ course.description }}</p>
+
+        <h4 class="mt-5 mb-4 fw-bold" style="color: var(--text-dark);">Course Curriculum</h4>
+        <div class="accordion shadow-sm" id="curriculumAccordion">
+          {% for module in modules %}
+            <div class="accordion-item border-0 mb-2" style="background: var(--card-bg);">
+              <h2 class="accordion-header" id="heading{{ module.id }}"><button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" style="background: var(--card-bg); color: var(--text-dark);">{{ module.title }}</button></h2>
+              <div id="collapse{{ module.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#curriculumAccordion">
+                <div class="accordion-body" style="background: var(--bg-light); color: var(--text-dark);">
+                  <ul class="list-unstyled mb-0">
+                    {% for lesson in module.lessons.all %}
+                      <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: var(--border-color) !important;">
+                        <span>
+                          <i class="fas {% if lesson.lesson_type == 'Video' %}
+                              fa-play-circle
+                            {% else %}
+                              fa-file-pdf
+                            {% endif %} me-2"
+                            style="color: var(--primary-cyan);">
+
+                          </i>
+                          {{ lesson.title }}
+                        </span>
+                        {% if lesson.is_preview %}
+                          <span class="badge bg-success">Free Preview</span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 sticky-top course-card" style="top: 20px;">
+          <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" />
+          <div class="card-body p-4 text-center">
+            <h3 class="fw-bold mb-3" style="color: var(--primary-green);">₹{{ course.price }}</h3>
+            <button class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold">Enroll Now</button>
+            <p class="small text-muted mb-0">
+              <i class="fas fa-certificate me-2"></i>Certificate of Completion
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
