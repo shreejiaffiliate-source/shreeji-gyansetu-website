@@ -12,14 +12,23 @@
         <div class="col-md-4">
           <a href="{% url 'course_detail' course.slug %}" class="text-decoration-none text-dark">
             <div class="card h-100 course-card shadow-sm border-0">
-              <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" />
+              <div class="position-relative">
+                <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" />
+
+                {% if course.is_live %}
+                  <div class="position-absolute top-0 end-0 m-3">
+                    <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+                  </div>
+                {% endif %}
+              </div>
+
               <div class="card-body">
                 <span class="badge bg-soft-success text-success mb-2">{{ course.level }}</span>
                 <h5 class="card-title fw-bold" style="color: var(--text-dark)">{{ course.title }}</h5>
                 <p class="card-text text-muted small">{{ course.description|truncatewords:15 }}</p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
-                  <span class="fw-bold text-primary">₹{{ course.price }}</span>
-                  <a href="{% url 'course_detail' course.slug %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                  <span class="fw-bold" style="color: var(--primary-green);">₹{{ course.price }}</span>
+                  <span class="btn btn-outline-primary btn-sm">View Details</span>
                 </div>
               </div>
             </div>

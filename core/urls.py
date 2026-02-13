@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -32,4 +32,7 @@ urlpatterns = [
     path('chained_filter/', include('smart_selects.urls')),
     path('category/<slug:slug>/', category_detail, name='category_detail'),
     path('course/<slug:slug>/', course_detail, name='course_detail'),
+    path('course/<slug:course_slug>/lesson/<int:lesson_id>/', lesson_detail, name='lesson_detail'),
+    path('search/', search, name='search'),
+    path('dashboard/teacher/', teacher_dashboard, name='teacher_dashboard'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

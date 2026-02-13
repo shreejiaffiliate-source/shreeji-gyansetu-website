@@ -7,28 +7,46 @@
         <p class="lead text-muted">{{ course.description }}</p>
 
         <h4 class="mt-5 mb-4 fw-bold" style="color: var(--text-dark);">Course Curriculum</h4>
+
         <div class="accordion shadow-sm" id="curriculumAccordion">
           {% for module in modules %}
-            <div class="accordion-item border-0 mb-2" style="background: var(--card-bg);">
-              <h2 class="accordion-header" id="heading{{ module.id }}"><button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" style="background: var(--card-bg); color: var(--text-dark);">{{ module.title }}</button></h2>
+            <div class="accordion-item border-0 mb-3 rounded shadow-sm" style="background: var(--card-bg); overflow: hidden;">
+              <h2 class="accordion-header" id="heading{{ module.id }}"><button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" style="background: var(--card-bg); color: var(--text-dark); border-left: 5px solid var(--primary-cyan);">{{ module.title }}</button></h2>
               <div id="collapse{{ module.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#curriculumAccordion">
-                <div class="accordion-body" style="background: var(--bg-light); color: var(--text-dark);">
-                  <ul class="list-unstyled mb-0">
+                <div class="accordion-body p-0" style="background: var(--bg-light);">
+                  <ul class="list-group list-group-flush mb-0">
                     {% for lesson in module.lessons.all %}
-                      <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: var(--border-color) !important;">
-                        <span>
-                          <i class="fas {% if lesson.lesson_type == 'Video' %}
-                              fa-play-circle
+                      <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-4" style="background: transparent; border-color: var(--border-color);">
+                        <div class="d-flex align-items-center">
+                          <div class="me-3 text-center" style="width: 30px;">
+                            {% if lesson.lesson_type == 'Video' %}
+                              <i class="fas fa-play-circle fs-5" style="color: var(--primary-cyan);"></i>
                             {% else %}
-                              fa-file-pdf
-                            {% endif %} me-2"
-                            style="color: var(--primary-cyan);">
+                              <i class="fas fa-file-alt fs-5" style="color: #ff9f43;"></i>
+                            {% endif %}
+                          </div>
 
-                          </i>
-                          {{ lesson.title }}
-                        </span>
+                          <div>
+                            {% if lesson.is_preview %}
+                              <a href="{% url 'lesson_detail' course.slug lesson.id %}" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">
+                                {{ lesson.title }}
+                                <small class="d-block text-muted fw-normal">
+                                  {% if lesson.lesson_type == 'Video' %}
+                                    Video Lesson
+                                  {% else %}
+                                    PDF Notes
+                                  {% endif %}
+                                </small>
+                              </a>
+                            {% else %}
+                              <span class="text-muted fw-semibold">{{ lesson.title }} <i class="fas fa-lock ms-1 small"></i></span>
+                              <small class="d-block text-muted fw-normal">Enroll to access</small>
+                            {% endif %}
+                          </div>
+                        </div>
+
                         {% if lesson.is_preview %}
-                          <span class="badge bg-success">Free Preview</span>
+                          <span class="badge rounded-pill bg-success-soft text-success border border-success">Free Preview</span>
                         {% endif %}
                       </li>
                     {% endfor %}
@@ -41,15 +59,27 @@
       </div>
 
       <div class="col-lg-4">
-        <div class="card shadow-sm border-0 sticky-top course-card" style="top: 20px;">
+        <div class="card shadow border-0 mb-4 course-card">
           <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" />
           <div class="card-body p-4 text-center">
             <h3 class="fw-bold mb-3" style="color: var(--primary-green);">₹{{ course.price }}</h3>
-            <button class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold">Enroll Now</button>
+            <button class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Enroll Now</button>
             <p class="small text-muted mb-0">
-              <i class="fas fa-certificate me-2"></i>Certificate of Completion
+              <i class="fas fa-infinity me-2"></i>Full Lifetime Access
             </p>
           </div>
+        </div>
+
+        <div class="card shadow border-0 p-4">
+          <h5 class="fw-bold mb-3">Instructor Details</h5>
+          <div class="d-flex align-items-center mb-3">
+            <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
+            <div class="ms-3">
+              <h6 class="mb-0 fw-bold">{{ course.teacher.get_full_name }}</h6>
+              <small class="text-muted">{{ course.teacher.profile.qualification }}</small>
+            </div>
+          </div>
+          <p class="small text-muted">{{ course.teacher.profile.bio|truncatewords:20 }}</p>
         </div>
       </div>
     </div>

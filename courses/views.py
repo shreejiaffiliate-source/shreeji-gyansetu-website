@@ -1,5 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from .models import MasterCategory, Course, Carousel, SuccessStory, StudyMaterial, YouTubeChannel
+from django.http import HttpResponseForbidden
+from .models import MasterCategory, Course, Lesson, Carousel, SuccessStory, StudyMaterial, YouTubeChannel
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
 def home(request):
     context = {
@@ -40,3 +43,54 @@ def course_detail(request, slug):
     }
 
     return render(request, 'courses/course_detail.html', context)
+
+def lesson_detail(request, course_slug, lesson_id):
+    # Fetch the lesson and ensure it belongs to the correct course
+    lesson = get_object_or_404(Lesson, id=lesson_id, course__slug=course_slug)
+    
+    # Simple Security: Only allow access if it's a preview
+    # In the future, you can add: or request.user.has_purchased_course
+    if not lesson.is_preview:
+        return HttpResponseForbidden("This lesson is only available for enrolled students.")
+    
+    context = {
+        'lesson': lesson,
+        'course': lesson.course
+    }
+    return render(request, 'courses/lesson_player.html', context)
+
+def search(request):
+    query = request.GET.get('q')
+    results = []
+    if query:
+        # Searches for the query in the title OR description
+        results = Course.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query),
+            is_active=True
+        )
+    
+    context = {
+        'results': results,
+        'query': query
+    }
+    return render(request, 'courses/search_results.html', context)
+
+
+@login_required
+def teacher_dashboard(request):
+    if request.user.profile.user_type != 'Teacher':
+        return HttpResponseForbidden("Access Dennied: Teachers Only")
+    
+    # Fetch courses belonging to this teacher
+    my_course = Course.objects.filter(teacher=request.user)
+
+    # Calculate some stats
+    total_courses = my_course.count()
+    total_enrollments = sum(Course.enrollment_count for course in my_course)
+
+    context = {
+        'my_course': my_course,
+        'total_courses': total_courses,
+        'total_enrollments': total_enrollments
+    }
+    return render(request, 'courses/teacher_dashboard.html', context)

@@ -1,6 +1,10 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.utils.text import slugify
 from smart_selects.db_fields import ChainedForeignKey
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class MasterCategory(models.Model):
     title = models.CharField(max_length=100)
@@ -31,6 +35,14 @@ class Course(models.Model):
     is_live = models.BooleanField(default=False)
     enrollment_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'create_user_profile': 'Teacher'},
+        related_name='taught_courses',
+    )
 
     def save(self, *args, **kwargs):
         if not self.slug: self.slug = slugify(self.title)
@@ -96,6 +108,9 @@ class Lesson(models.Model):
     
     title = models.CharField(max_length=200)
     lesson_type = models.CharField(max_length=10, choices=LESSON_TYPES, default='Video')
+    lecturer_name = models.CharField(max_length=100, blank=True, null=True, default="Admin")
+    description = models.TextField(blank=True, null=True, help_text="Detailed information about this video content")
+    thumbnail = models.ImageField(upload_to='lesson_thumbnails/', blank=True, null=True, help_text="Upload a specific thumbnail for this lesson video")
     video_url = models.URLField(blank=True, null=True, help_text="YouTube or Vimeo Link")
     content_file = models.FileField(upload_to='lessons/', blank=True, null=True)
     is_preview = models.BooleanField(default=False, help_text="Check if this is a free demo lesson")
@@ -138,3 +153,42 @@ class YouTubeChannel(models.Model):
     class Meta:
         verbose_name_plural = "7. YouTube Channels"
     def __str__(self): return self.name
+
+class Profile(models.Model):
+    USER_TYPES = [
+        ('Admin', 'Admin'),
+        ('Teacher', 'Teacher'),
+        ('Student', 'Student'),
+    ]
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='Student')
+    photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user,png')
+    phone_number = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True)
+
+    # Teacher Specific Information
+
+    qualification = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. M.Sc in Physics")
+    subject_specialization = models.ForeignKey('MasterCategory', on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
+    experience_years = models.PositiveIntegerField(default=0)
+    bio = models.TextField(blank=True, help_text="Short professional summary")
+
+    # Student Specific Information
+    enrollment_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.user_type}"
+    
+# Signals to automatically create a profile when a User is created
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+    

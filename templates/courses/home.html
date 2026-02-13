@@ -35,10 +35,18 @@
         <div class="col-md-3">
           <a href="{% url 'course_detail' course.slug %}" class="text-decoration-none text-dark">
             <div class="card course-card h-100 shadow-sm">
-              <img src="{{ course.thumbnail.url }}" class="card-img-top" style="height: 160px; object-fit: contain;" />
+              <div class="position-relative">
+                <img src="{{ course.thumbnail.url }}" class="card-img-top" />
+                {% if course.is_live %}
+                  <div class="position-absolute top-0 end-0 m-2">
+                    <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+                  </div>
+                {% endif %}
+              </div>
+
               <div class="card-body p-3">
-                <h6 class="fw-bold">{{ course.title }}</h6>
-                <p class="text-success fw-bold">₹{{ course.price }}</p>
+                <h6 class="fw-bold" style="color: var(--text-dark);">{{ course.title }}</h6>
+                <p class="fw-bold" style="color: var(--primary-green);">₹{{ course.price }}</p>
                 <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary btn-sm w-100">View Course</a>
               </div>
             </div>

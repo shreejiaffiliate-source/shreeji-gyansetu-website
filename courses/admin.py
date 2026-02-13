@@ -1,7 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+from django.contrib.admin.exceptions import NotRegistered
 from .models import (
     MasterCategory, Course, Module, Lesson, 
-    Carousel, SuccessStory, StudyMaterial, YouTubeChannel
+    Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile
 )
 
 # --- INLINES ---
@@ -41,8 +44,8 @@ class ModuleAdmin(admin.ModelAdmin):
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     # Ensure course is at the top
-    fields = ('course', 'module', 'title', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order')
-    list_display = ('id', 'title', 'course_id', 'module_id', 'lesson_type', 'is_preview', 'order')
+    fields = ('course', 'module', 'title', 'thumbnail', 'lecturer_name', 'description', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order')
+    list_display = ('id', 'title', 'lecturer_name', 'course_id', 'module_id', 'lesson_type', 'is_preview', 'order')
     list_filter = ('lesson_type', 'course', 'module')
     
     # Both are now searchable and highlighted
@@ -62,3 +65,24 @@ class CarouselAdmin(admin.ModelAdmin):
 admin.site.register(SuccessStory)
 admin.site.register(StudyMaterial)
 admin.site.register(YouTubeChannel)
+
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+    verbose_name_plural = 'User Profiles'
+
+class UserAdmin(BaseUserAdmin):
+    inlines = (ProfileInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_user_type')
+
+    def get_user_type(self, obj):
+        return obj.profile.user_type
+    get_user_type.short_description = 'User Type'
+
+# Re-register UserAdmin
+
+try:
+    admin.site.unregister(User)
+except NotRegistered:
+    pass
+admin.site.register(User, UserAdmin)

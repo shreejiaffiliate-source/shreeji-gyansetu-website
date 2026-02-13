@@ -119,6 +119,73 @@ body {
   border: none;
 }
 
+.fa-certificate {
+  color: var(--primary-green);
+}
+
+/* Live Indicator Styles */
+.live-badge {
+  background-color: #ff0000;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  animation: pulse-red 2s infinite;
+  z-index: 10;
+}
+
+.live-dot {
+  height: 6px;
+  width: 6px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
+/* --- Final Fix for Enroll Button Hover --- */
+
+/* 1. Base state: Force your brand blue */
+.course-card .btn-enroll {
+  background-color: var(--primary-blue) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* 2. Hover state: Force your brand green */
+.course-card .btn-enroll:hover {
+  background-color: var(--primary-green) !important;
+  color: white !important;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(22, 142, 67, 0.3) !important;
+}
+
+/* 3. Active/Click state: Darken the green slightly */
+.course-card .btn-enroll:active {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
 /* Carousel Customization */
 .carousel-item img {
   border-radius: 0 0 20px 20px; /* Slight curve at bottom like KGS */
@@ -315,6 +382,45 @@ body {
 
 .accordion-item {
   border: 1px solid var(--border-color) !important;
+}
+
+/* Soft background for badges and icons */
+.bg-success-soft {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+/* Fix for Accordion Button after applying the Border */
+.accordion-button:not(.collapsed) {
+  box-shadow: none;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Ensure icons in sidebar are visible */
+.bg-primary-soft i,
+.bg-success-soft i {
+  font-size: 1.2rem;
+}
+
+/* Styling for the Lesson List Items */
+.list-group-item:hover {
+  background-color: rgba(0, 109, 160, 0.03) !important;
+  transition: 0.2s;
+}
+
+/* Success Soft Badge */
+.bg-success-soft {
+  background-color: rgba(22, 142, 67, 0.1) !important;
+  padding: 5px 15px;
+}
+
+/* Icon backgrounds for Teacher Card */
+.bg-primary-soft {
+  background-color: rgba(11, 67, 120, 0.1) !important;
+}
+
+/* Fixed spacing for Lesson types */
+.text-muted.small {
+  font-size: 0.75rem;
 }
 
 /* Ensure the course detail sidebar matches your existing card style */
