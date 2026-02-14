@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from smart_selects.db_fields import ChainedForeignKey
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models import Q
 
 class MasterCategory(models.Model):
     title = models.CharField(max_length=100)
@@ -40,7 +41,7 @@ class Course(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        limit_choices_to={'create_user_profile': 'Teacher'},
+        limit_choices_to=Q(profile__user_type= 'Teacher') | Q(profile__user_type= 'Admin'),
         related_name='taught_courses',
     )
 
@@ -66,7 +67,7 @@ class Carousel(models.Model):
 
 class Module(models.Model):
     # Changed related_name to 'category_modules' to avoid conflict with Course
-    master_category = models.ForeignKey(MasterCategory, on_delete=models.CASCADE, related_name='category_modules')
+    master_category = models.ForeignKey(MasterCategory, on_delete=models.SET_NULL, related_name='category_modules', null=True, blank=True)
 
     # Added related_name='modules' to fix AttributeError at /course/
     course = ChainedForeignKey(
@@ -190,5 +191,6 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
     

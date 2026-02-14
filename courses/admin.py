@@ -22,7 +22,7 @@ class ModuleInline(admin.StackedInline):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     # This search_field is what makes 'Course' highlighted in the Lesson Admin
-    search_fields = ('title',) 
+    search_fields = ('title', 'teacher__username') 
     list_display = ('id', 'title', 'master_category_id', 'price', 'is_active', 'is_live')
     list_filter = ('master_category', 'level', 'is_live', 'is_active')
     prepopulated_fields = {'slug': ('title',)}

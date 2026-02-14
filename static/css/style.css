@@ -429,6 +429,30 @@ body {
   color: var(--text-dark);
 }
 
+/* Ensure all tables are theme-adaptive */
+.table {
+  color: var(--text-dark) !important;
+  background-color: transparent !important;
+}
+
+.table thead th {
+  background-color: var(--bg-light) !important;
+  color: var(--text-dark) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.table tbody td {
+  background-color: var(--card-bg) !important;
+  color: var(--text-dark) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Fix for Hover effect in Dark Mode */
+.table-hover tbody tr:hover td {
+  background-color: var(--bg-light) !important;
+  opacity: 0.9;
+}
+
 /* --- Fix for Footer Text and Links --- */
 footer h6 {
   color: var(--text-dark) !important;

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container d-flex align-items-center justify-content-center py-5">
+    <div class="card border-0 shadow-lg p-4" style="width: 100%; max-width: 600px; border-radius: 20px; background: var(--card-bg);">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold" style="color: var(--text-dark);">Join Shreeji GyanSetu</h2>
+        <p class="text-muted">Start your learning or teaching journey today.</p>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">First Name</label>
+            {{ form.first_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Last Name</label>
+            {{ form.last_name }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Username</label>
+            {{ form.username }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Email</label>
+            {{ form.email }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Register As</label>
+            {{ form.user_type }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Password</label>
+            {{ form.password }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Confirm Password</label>
+            {{ form.confirm_password }}
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm mt-4 btn-enroll">Create Account <i class="fas fa-user-plus ms-2"></i></button>
+
+        <p class="text-center mt-3 small">
+          Already have an account? <a href="{% url 'login' %}" class="fw-bold text-primary">Login Here</a>
+        </p>
+      </form>
+    </div>
+  </div>
+{% endblock %}

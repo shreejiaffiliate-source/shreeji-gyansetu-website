@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg);">
+                <h3 class="fw-bold mb-4">Edit Lesson: {{ lesson.title }}</h3>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="fw-bold">Lesson Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ lesson.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Type</label>
+                        <select name="lesson_type" class="form-select">
+                            <option value="Video" {% if lesson.lesson_type == 'Video' %}selected{% endif %}>Video</option>
+                            <option value="Notes" {% if lesson.lesson_type == 'Notes' %}selected{% endif %}>Notes (PDF)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Video URL</label>
+                        <input type="url" name="video_url" class="form-control" value="{{ lesson.video_url|default:'' }}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="fw-bold">Change File (Optional)</label>
+                        <input type="file" name="content_file" class="form-control">
+                        {% if lesson.content_file %}<small class="text-muted">Current: {{ lesson.content_file.name }}</small>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Update Lesson</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

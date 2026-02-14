@@ -18,9 +18,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 
 admin.site.site_header = "Shreeji GyanSetu Administration"
 admin.site.site_title = "GyanSetu Admin Portal"
@@ -35,4 +36,15 @@ urlpatterns = [
     path('course/<slug:course_slug>/lesson/<int:lesson_id>/', lesson_detail, name='lesson_detail'),
     path('search/', search, name='search'),
     path('dashboard/teacher/', teacher_dashboard, name='teacher_dashboard'),
+    path('dashboard/teacher/upload', upload_course, name='upload_course'),
+    path('course/<slug:course_slug>/manage-curriculum/', manage_curriculum, name='manage_curriculum'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login-success/', login_success, name='login_success'),
+    path('module/<int:module_id>/add-lesson/', add_lesson, name='add_lesson'),
+    path('register/', register, name='register'),
+    path('course/<slug:slug>/manage', course_detail_edit, name='course_detail_edit'),
+    path('course/<slug:slug>/edit', edit_course, name='edit_course'),
+    path('lesson/<int:lesson_id>/edit/', edit_lesson, name='edit_lesson'),
+    path('lesson/<int:lesson_id>/delete/', delete_lesson, name='delete_lesson'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

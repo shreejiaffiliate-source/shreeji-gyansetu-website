@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px;">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" style="color: var(--text-dark);">Edit Course: {{ course.title }}</h2>
+            <span class="badge bg-primary">Editing Mode</span>
+          </div>
+
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="fw-bold mb-2">Course Title</label>
+                {{ form.title }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Category</label>
+                {{ form.master_category }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Difficulty Level</label>
+                {{ form.level }}
+              </div>
+
+              <div class="col-12">
+                <label class="fw-bold mb-2">Description</label>
+                {{ form.description }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Regular Price (₹)</label>
+                {{ form.price }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Discount Price (₹)</label>
+                {{ form.discount_price }}
+              </div>
+
+              <div class="col-12">
+                <label class="fw-bold mb-2">Current Thumbnail</label>
+                <div class="mb-2">
+                  <img src="{{ course.thumbnail.url }}" class="rounded shadow-sm" style="height: 100px;" />
+                </div>
+                {{ form.thumbnail }}
+              </div>
+
+              <div class="col-12 mt-4 d-flex gap-3">
+                <div class="form-check form-switch">
+                  {{ form.is_live }}
+                  <label class="form-check-label ms-2">Live Course</label>
+                </div>
+                <div class="form-check form-switch">
+                  {{ form.is_active }}
+                  <label class="form-check-label ms-2">Active (Visible)</label>
+                </div>
+              </div>
+
+              <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm"><i class="fas fa-save me-2"></i> Update Course Information</button>
+                <a href="{% url 'course_detail_edit' course.slug %}" class="btn btn-link w-100 text-muted mt-2">Discard Changes</a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

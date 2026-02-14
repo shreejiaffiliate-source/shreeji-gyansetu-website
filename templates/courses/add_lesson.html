@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px;">
+          <h3 class="fw-bold mb-1" style="color: var(--text-dark);">Upload Lesson</h3>
+          <p class="text-muted small mb-4">
+            Adding to: <strong>{{ module.title }}</strong>
+          </p>
+
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="fw-bold">Lesson Title</label>
+              <input type="text" name="title" class="form-control" placeholder="e.g. Introduction to Python" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Type</label>
+              <select name="lesson_type" class="form-select">
+                <option value="Video">Video</option>
+                <option value="Notes">Notes (PDF)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Video Link (YouTube/Vimeo)</label>
+              <input type="url" name="video_url" class="form-control" placeholder="Paste link here if not uploading file" />
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Upload File (MP4 or PDF)</label>
+              <input type="file" name="content_file" class="form-control" />
+            </div>
+
+            <div class="form-check form-switch mb-4">
+              <input class="form-check-input" type="checkbox" name="is_preview" id="is_preview" />
+              <label class="form-check-label fw-bold" for="is_preview">Mark as Free Preview?</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold btn-enroll">Save Lesson</button>
+            <a href="{% url 'manage_curriculum' module.course.slug %}" class="btn btn-link w-100 text-muted mt-2">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

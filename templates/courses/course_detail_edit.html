@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h1 class="fw-bold mb-3" style="color: var(--text-dark);">{{ course.title }}</h1>
+            <p class="lead text-muted">{{ course.description }}</p>
+          </div>
+          <a href="{% url 'edit_course' course.slug %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit Details</a>
+        </div>
+
+        <h4 class="mt-5 mb-4 fw-bold" style="color: var(--text-dark);">Course Curriculum</h4>
+        <div class="accordion shadow-sm" id="curriculumAccordion">
+          {% for module in modules %}
+            <div class="accordion-item border-0 mb-2" style="background: var(--card-bg);">
+              <h2 class="accordion-header d-flex align-items-center"><button class="accordion-button collapsed fw-bold flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" style="background: var(--card-bg); color: var(--text-dark);">{{ module.title }}</button></h2>
+              <div id="collapse{{ module.id }}" class="accordion-collapse collapse" data-bs-parent="#curriculumAccordion">
+                <div class="accordion-body" style="background: var(--bg-light);">
+                  <ul class="list-unstyled mb-0">
+                    {% for lesson in module.lessons.all %}
+                      <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span>
+                          <i class="fas {% if lesson.lesson_type == 'Video' %}
+                              
+                              
+                              
+                              
+                              
+                              fa-play-circle
+
+
+
+
+
+                            {% else %}
+                              
+                              
+                              
+                              
+                              
+                              fa-file-pdf
+
+
+
+
+
+                            {% endif %} me-2 text-primary">
+
+                          </i>
+                          {{ lesson.title }}
+                        </span>
+
+                        <div class="btn-group">
+                          <a href="{% url 'edit_lesson' lesson.id %}" class="btn btn-sm text-primary" title="Edit Lesson"><i class="fas fa-edit"></i></a>
+                          <a href="{% url 'delete_lesson' lesson.id %}" class="btn btn-sm text-danger" title="Delete Lesson"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </li>
+                    {% endfor %}
+                    <li class="py-2 text-center">
+                      <a href="{% url 'add_lesson' module.id %}" class="btn btn-sm btn-link text-success text-decoration-none fw-bold"><i class="fas fa-plus-circle"></i> Add Lesson to this Module</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-4">
+          <a href="{% url 'manage_curriculum' course.slug %}" class="btn btn-dark w-100 py-3 fw-bold"><i class="fas fa-tasks me-2"></i> Rearrange Modules / Add New Module</a>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 sticky-top p-4" style="top: 20px; background: var(--card-bg);">
+          <img src="{{ course.thumbnail.url }}" class="rounded mb-3 w-100" style="height: 180px; object-fit: cover;" />
+          <h5 class="fw-bold">Course Status</h5>
+          <p>
+            {% if course.is_active %}
+              <span class="badge bg-success">Visible to Students</span>
+            {% else %}
+              <span class="badge bg-secondary">Draft Mode</span>
+            {% endif %}
+          </p>
+          <hr />
+          <div class="d-flex justify-content-between mb-2">
+            <span>Price:</span> <span class="fw-bold">₹{{ course.price }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span>Students:</span> <span class="fw-bold text-primary">{{ course.enrollment_count }}</span>
+          </div>
+          <button class="btn btn-outline-danger w-100 btn-sm"><i class="fas fa-archive"></i> Unpublish Course</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px;">
+          <h2 class="fw-bold mb-4" style="color: var(--text-dark);">Create New Course</h2>
+
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="fw-bold mb-2">Course Title</label>
+                {{ form.title }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Category</label>
+                {{ form.master_category }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Difficulty Level</label>
+                {{ form.level }}
+              </div>
+
+              <div class="col-12">
+                <label class="fw-bold mb-2">Description</label>
+                {{ form.description }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Regular Price (₹)</label>
+                {{ form.price }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="fw-bold mb-2">Discount Price (₹)</label>
+                {{ form.discount_price }}
+              </div>
+
+              <div class="col-12">
+                <label class="fw-bold mb-2">Course Thumbnail</label>
+                {{ form.thumbnail }}
+              </div>
+
+              <div class="col-12 mt-4">
+                <div class="form-check form-switch">
+                  {{ form.is_live }}
+                  <label class="form-check-label ms-2">Is this a Live Course?</label>
+                </div>
+              </div>
+
+              <div class="col-12 mt-4">
+                <div class="form-check form-switch">
+                  {{ form.is_active }}
+                  <label class="form-check-label ms-2">Is this an Active Course?</label>
+                </div>
+              </div>
+
+              <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold btn-enroll">Create Course & Continue</button>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-link w-100 text-muted mt-2">Cancel</a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
