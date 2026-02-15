@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}
+  My Dashboard | Shreeji GyanSetu
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-bg: #2c3e50; /* Matching the dark blue in your image */
+    }
+    
+    body {
+      background-color: #f4f7fe;
+    }
+    
+    /* Sidebar Styling */
+    .dashboard-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--sidebar-bg);
+      color: white;
+      position: fixed;
+      height: 100vh;
+      z-index: 1000;
+      transition: all 0.3s;
+    }
+    
+    .sidebar-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      margin: 0;
+    }
+    
+    .sidebar-menu li a {
+      padding: 12px 25px;
+      display: flex;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+    
+    .sidebar-menu li a:hover,
+    .sidebar-menu li.active a {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border-left: 4px solid var(--primary-cyan);
+    }
+    
+    .sidebar-menu li a i {
+      width: 30px;
+      font-size: 1.1rem;
+    }
+    
+    /* Content Area */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 30px;
+    }
+    
+    /* Profile Dropdown Customization */
+    .profile-dropdown {
+      min-width: 250px;
+      padding: 15px;
+      border-radius: 12px;
+    }
+    .profile-info {
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 10px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="dashboard-wrapper">
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h4 class="fw-bold mb-0">KGS</h4>
+      </div>
+      <ul class="sidebar-menu">
+        <li class="active">
+          <a href="#"><i class="fas fa-th-large"></i> Dashboard</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-video"></i> Live Classes</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-book"></i> My Classes</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-edit"></i> Answer Writing</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-graduation-cap"></i> Courses</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-file-alt"></i> Study Materials</a>
+        </li>
+        <li>
+          <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card border-0 shadow-sm p-4" style="border-radius: 15px;">
+            <h5 class="fw-bold">Your Dashboard Today</h5>
+            <p class="text-muted small">Hello {{ full_name }}, Welcome Back!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <h5 class="fw-bold px-3">Recommended Courses</h5>
+        {% for course in enrolled_courses %}
+          <div class="col-lg-6 col-md-12">
+            <div class="card h-100 border-0 shadow-sm" style="background: var(--card-bg); border-radius: 20px; transition: transform 0.3s;">
+              <div class="row g-0">
+                <div class="col-4">
+                  <img src="{{ course.thumbnail.url }}" class="img-fluid rounded-start h-100" style="object-fit: cover;" />
+                </div>
+                <div class="col-8">
+                  <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1">{{ course.title }}</h6>
+                    <p class="text-muted small mb-3">Live + Recorded / Hindi / English</p>
+                    <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary px-3 rounded-pill">View</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+{% endblock %}

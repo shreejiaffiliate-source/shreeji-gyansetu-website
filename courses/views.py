@@ -29,10 +29,25 @@ def course_detail(request, slug):
     return render(request, 'courses/course_detail.html', {'course': course, 'modules': modules})
 
 def lesson_detail(request, course_slug, lesson_id):
-    lesson = get_object_or_404(Lesson, id=lesson_id, course__slug=course_slug)
-    if not lesson.is_preview:
-        return HttpResponseForbidden("This lesson is only available for enrolled students.")
-    return render(request, 'courses/lesson_player.html', {'lesson': lesson, 'course': lesson.course})
+    course = get_object_or_404(Course, slug=course_slug)
+    lesson = get_object_or_404(Lesson, id=lesson_id, course=course)
+    
+    # Check if student is enrolled or if it's a free preview
+    user_is_enrolled = request.user.is_authenticated and request.user in course.students.all()
+    
+    if not (lesson.is_preview or user_is_enrolled):
+        return HttpResponseForbidden("This lesson is locked. Please enroll in the course to view it.")
+        
+
+    # Fetch all modules and lessons for the sidebar navigation
+    modules = course.modules.all().prefetch_related('lessons')
+
+    context = {
+        'course': course,
+        'lesson': lesson,
+        'modules': modules,
+    }
+    return render(request, 'courses/lesson_player.html', context)
 
 def search(request):
     query = request.GET.get('q')
@@ -65,7 +80,6 @@ def teacher_dashboard(request):
     
     my_courses = Course.objects.filter(teacher=request.user)
     total_courses = my_courses.count()
-    # Fixed summation logic 
     total_enrollments = sum(course.enrollment_count for course in my_courses)
 
     context = {
@@ -88,7 +102,7 @@ def upload_course(request):
             course.save()
             return redirect('teacher_dashboard')
     else:
-        form = CourseUploadForm(request.POST, request.FILES)
+        form = CourseUploadForm() # Corrected: Removed request.POST/FILES from GET request
 
     return render(request, 'courses/upload_course.html', {'form': form})
     
@@ -99,11 +113,9 @@ def manage_curriculum(request, course_slug):
         formset = ModuleFormSet(request.POST, instance=course)
         if formset.is_valid():
             modules = formset.save(commit=False)
-
             for module in modules:
                 module.master_category = course.master_category
                 module.save()
-
             formset.save_m2m()
             return redirect('teacher_dashboard')
     else:
@@ -129,7 +141,6 @@ def add_lesson(request, module_id):
 
 @login_required
 def login_success(request):
-
     if not hasattr(request.user, 'profile'):
         if request.user.is_superuser:
             return redirect('/admin/')
@@ -143,62 +154,63 @@ def login_success(request):
 
 @login_required
 def course_detail_edit(request, slug):
-    # Ensure only the teacher who owns the course can see this page
     course = get_object_or_404(Course, slug=slug, teacher=request.user)
     modules = course.modules.all().prefetch_related('lessons')
-
     context = {
         'course': course,
         'modules': modules,
-        'is_edit_mode': True # We can use this to show 'Edit buttons'
+        'is_edit_mode': True
     }
     return render(request, 'courses/course_detail_edit.html', context)
 
 @login_required
 def edit_course(request, slug):
-    # Ensure only the own can edit
     course = get_object_or_404(Course, slug=slug, teacher=request.user)
-
     if request.method == 'POST':
-        # Passing instance=course tells Django to UPDATE the record, not create a new one
         form = CourseUploadForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             form.save()
-            # Redirect back to the Manage page we created earlier
             return redirect('course_detail_edit', slug=course.slug)
     else:
-            form = CourseUploadForm(instance=course)
-
-    return render(request, 'courses/edit_course.html',{
-        'form': form,
-        'course': course,
-        })
+        form = CourseUploadForm(instance=course)
+    return render(request, 'courses/edit_course.html', {'form': form, 'course': course})
 
 @login_required
-def edit_lesson(request,lesson_id):
+def edit_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id, course__teacher=request.user)
-
     if request.method == 'POST':
         lesson.title = request.POST.get('title')
         lesson.lesson_type = request.POST.get('lesson_type')
         lesson.video_url = request.POST.get('video_url')
         lesson.is_preview = 'is_preview' in request.POST
-
         if request.FILES.get('content_file'):
             lesson.content_file = request.FILES.get('content_file')
-
         lesson.save()
         return redirect('course_detail_edit', slug=lesson.course.slug)
-    
-    return render(request, 'courses/edit_lesson.html', {'lesson':lesson})
+    return render(request, 'courses/edit_lesson.html', {'lesson': lesson})
 
 @login_required
 def delete_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id, course__teacher=request.user)
     course_slug = lesson.course.slug
-
     if request.method == 'POST':
         lesson.delete()
         return redirect('course_detail_edit', slug=course_slug)
-    
-    return render(request, 'courses/delete1_lesson_confirm.html', {'lesson':lesson})
+    return render(request, 'courses/delete1_lesson_confirm.html', {'lesson': lesson})
+
+@login_required
+def student_dashboard(request):
+    # Fetch courses where the current user is in the students ManyToMany field
+    enrolled_courses = request.user.enrolled_courses.all()
+    context = {
+        'enrolled_courses': enrolled_courses, # Fixed typo in context key
+        'full_name': request.user.get_full_name() or request.user.username
+    }
+    return render(request, 'courses/student_dashboard.html', context)
+
+@login_required
+def enroll_course(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    if request.user not in course.students.all():
+        course.students.add(request.user)
+    return render(request, 'courses/enroll_success.html', {'course': course})

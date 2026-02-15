@@ -1,62 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-  <div class="container-fluid bg-dark py-4">
-    <div class="container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item">
-            <a href="{% url 'course_detail' course.slug %}" class="text-info">{{ course.title }}</a>
-          </li>
-          <li class="breadcrumb-item active text-white" aria-current="page">{{ lesson.title }}</li>
-        </ol>
-      </nav>
+<div class="container-fluid py-4" style="background: var(--bg-light); min-height: 100vh;">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden mb-4 bg-black">
+        {% if lesson.content_file %}
+          <video id="courseVideo" controls class="w-100 h-100" 
+          controlsList="nodownload"
+          oncontextmenu="return false;"
+            {% if lesson.thumbnail %} poster="{{ lesson.thumbnail.url }}"
+            {% else %} poster="{{ course.thumbnail.url }}" {% endif %}>
+            <source src="{{ lesson.content_file.url }}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        {% elif lesson.video_url %}
+          <iframe src="{{ lesson.video_url }}" title="{{ lesson.title }}" allowfullscreen></iframe>
+        {% else %}
+          <div class="d-flex flex-column align-items-center justify-content-center text-center p-5" style="background: var(--card-bg); height: 100%;">
+            <i class="fas fa-file-pdf fa-5x text-danger mb-3"></i>
+            <h4 style="color: var(--text-dark);">{{ lesson.title }}</h4>
+            <p class="text-muted">This lesson contains study material only.</p>
+            <a href="{{ lesson.content_file.url }}" class="btn btn-primary rounded-pill px-4" download>
+              <i class="fas fa-download me-2"></i> Download Notes
+            </a>
+          </div>
+        {% endif %}
+      </div>
 
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden mb-4 bg-black">
-            {% if lesson.content_file %}
-              <video controls class="w-100 h-100" 
-              {% if lesson.thumbnail %}
-              poster="{{ lesson.thumbnail.url }}"
-              {% else %} poster="{{ course.thumbnail.url }}" {% endif %}>
-                <source src="{{ lesson.content_file.url }}" type="video/mp4" />Your browser does not support the video tag.
-              </video>
-            {% elif lesson.video_url %}
-              <iframe src="{{ lesson.video_url }}" title="{{ lesson.title }}" allowfullscreen></iframe>
-            {% else %}
-              <div class="bg-secondary d-flex align-items-center justify-content-center text-white">
-                <h4>No video file or link provided for this lesson.</h4>
-              </div>
+      <div class="card border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px;">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 class="fw-bold mb-1" style="color: var(--text-dark);">{{ lesson.title }}</h2>
+              <p class="mb-0" style="color: var(--primary-cyan); font-weight: 600;">
+                <i class="fas fa-user-tie me-2"></i>Lecturer: {{ lesson.lecturer_name }}
+              </p>
+            </div>
+            {% if lesson.is_preview %}
+              <span class="badge bg-success px-3 py-2">Free Preview Lesson</span>
             {% endif %}
           </div>
 
-          <div class="card border-0 shadow-sm" style="background: var(--card-bg);">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h2 class="fw-bold mb-1" style="color: var(--text-dark);">{{ lesson.title }}</h2>
-                  <p class="mb-0" style="color: var(--primary-cyan); font-weight: 600;">
-                    <i class="fas fa-user-tie me-2"></i>Lecturer: {{ lesson.lecturer_name }}
-                  </p>
-                </div>
-                <span class="badge bg-success">Free Preview Lesson</span>
-              </div>
+          <hr style="border-color: var(--border-color);" />
 
-              <hr style="border-color: var(--border-color);" />
-
-              <div class="lesson-description mb-4">
-                <h5 class="fw-bold" style="color: var(--text-dark);">About this Lesson</h5>
-                <div style="color: var(--text-dark); opacity: 0.8; line-height: 1.6;">{{ lesson.description|linebreaks }}</div>
-              </div>
-
-              <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded" style="background: var(--bg-light) !important;">
-                <p class="text-muted mb-0 small">Enjoying this preview? Enroll now to unlock 100% of the content!</p>
-                <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary btn-enroll">Enroll Now</a>
-              </div>
+          <div class="lesson-description">
+            <h5 class="fw-bold" style="color: var(--text-dark);">About this Lesson</h5>
+            <div style="color: var(--text-dark); opacity: 0.8; line-height: 1.6;">
+              {{ lesson.description|linebreaks }}
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm sticky-top" style="top: 85px; border-radius: 15px; background: var(--card-bg); max-height: 85vh;">
+        <div class="card-header bg-transparent py-3 border-0">
+          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);">Course Content</h5>
+        </div>
+        <div class="accordion accordion-flush overflow-auto" id="playerAccordion">
+          {% for module in modules %}
+            <div class="accordion-item" style="background: transparent; border-color: var(--border-color);">
+              <h2 class="accordion-header">
+                <button class="accordion-button {% if lesson.module != module %}collapsed{% endif %} fw-bold small" 
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mod{{ module.id }}" 
+                        style="background: var(--bg-light); color: var(--text-dark);">
+                  {{ module.title }}
+                </button>
+              </h2>
+              <div id="mod{{ module.id }}" class="accordion-collapse collapse {% if lesson.module == module %}show{% endif %}" data-bs-parent="#playerAccordion">
+                <div class="accordion-body p-0">
+                  <div class="list-group list-group-flush">
+                    {% for item in module.lessons.all %}
+                      <a href="{% url 'lesson_detail' course.slug item.id %}" 
+                         class="list-group-item list-group-item-action border-0 py-3 d-flex align-items-center {% if item == lesson %}active-lesson{% endif %}"
+                         style="background: {% if item == lesson %}var(--primary-cyan){% else %}transparent{% endif %}; color: {% if item == lesson %}white{% else %}var(--text-dark){% endif %};">
+                        <i class="fas {% if item.lesson_type == 'Video' %}fa-play-circle{% else %}fa-file-alt{% endif %} me-3 opacity-75"></i>
+                        <span class="small">{{ item.title }}</span>
+                      </a>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/video_controls.js' %}?v=1.1"></script>
+
 {% endblock %}

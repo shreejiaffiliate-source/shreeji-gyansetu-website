@@ -429,6 +429,15 @@ body {
   color: var(--text-dark);
 }
 
+.active-lesson {
+  background-color: var(--primary-cyan) !important;
+  color: white !important;
+  font-weight: bold;
+}
+.accordion-button:not(.collapsed)::after {
+  filter: brightness(0) invert(1);
+}
+
 /* Ensure all tables are theme-adaptive */
 .table {
   color: var(--text-dark) !important;

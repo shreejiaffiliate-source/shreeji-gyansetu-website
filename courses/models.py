@@ -45,6 +45,15 @@ class Course(models.Model):
         related_name='taught_courses',
     )
 
+    students = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='enrolled_courses',
+        blank=True
+    )
+
+    def total_students(self):
+        return self.students.count()
+
     def save(self, *args, **kwargs):
         if not self.slug: self.slug = slugify(self.title)
         super().save(*args, **kwargs)
@@ -123,6 +132,18 @@ class Lesson(models.Model):
 
     def __str__(self): 
         return f"{self.module.title} - {self.title}"
+    
+# class LessonAssignment(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+#     is_completed = models.BooleanField(default=False)
+#     completed_at = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         unique_together = ('user', 'lesson')
+
+#     def __str__(self):
+#         return f"{self.user.username} - {self.lesson.title}"
 
 class StudyMaterial(models.Model):
     title = models.CharField(max_length=100)
@@ -164,7 +185,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='Student')
-    photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user,png')
+    photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user.png')
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
 
@@ -184,10 +205,13 @@ class Profile(models.Model):
     
 # Signals to automatically create a profile when a User is created
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.get_or_create(user=instance)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):

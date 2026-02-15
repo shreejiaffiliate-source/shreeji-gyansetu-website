@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
@@ -47,4 +47,10 @@ urlpatterns = [
     path('course/<slug:slug>/edit', edit_course, name='edit_course'),
     path('lesson/<int:lesson_id>/edit/', edit_lesson, name='edit_lesson'),
     path('lesson/<int:lesson_id>/delete/', delete_lesson, name='delete_lesson'),
+    path('my-learning/', student_dashboard, name='student_dashboard'),
+    path('course/<slug:slug>/enroll', enroll_course, name='enroll_course')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

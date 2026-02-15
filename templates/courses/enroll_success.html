@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5 text-center">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-lg p-5" style="background: var(--card-bg); border-radius: 20px;">
+          <div class="mb-4">
+            <div class="display-1 text-success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+
+          <h2 class="fw-bold mb-3" style="color: var(--text-dark);">Congratulations!</h2>
+          <p class="lead text-muted mb-4">
+            You have successfully enrolled in <br />
+            <strong class="text-dark">{{ course.title }}</strong>
+          </p>
+
+          <div class="bg-light p-3 rounded mb-4" style="border-left: 5px solid var(--primary-blue);">
+            <p class="small mb-0 text-start">
+              <i class="fas fa-info-circle me-2 text-primary"></i>
+              This course has been added to your <strong>My Learning</strong> dashboard. You have lifetime access to all materials.
+            </p>
+          </div>
+
+          <div class="d-grid gap-3">
+            <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary btn-lg fw-bold py-3 shadow-sm btn-enroll">Start Learning Now <i class="fas fa-play-circle ms-2"></i></a>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">Go to My Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

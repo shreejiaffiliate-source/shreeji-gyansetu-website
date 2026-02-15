@@ -27,7 +27,7 @@
                           </div>
 
                           <div>
-                            {% if lesson.is_preview %}
+                            {% if lesson.is_preview or user in course.students.all %}
                               <a href="{% url 'lesson_detail' course.slug lesson.id %}" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">
                                 {{ lesson.title }}
                                 <small class="d-block text-muted fw-normal">
@@ -47,6 +47,8 @@
 
                         {% if lesson.is_preview %}
                           <span class="badge rounded-pill bg-success-soft text-success border border-success">Free Preview</span>
+                        {% elif user in course.students.all %}
+                          <span class="badge rounded-pill bg-primary-soft text-primary border border-primary">Accessed</span>
                         {% endif %}
                       </li>
                     {% endfor %}
@@ -62,20 +64,41 @@
         <div class="card shadow border-0 mb-4 course-card">
           <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" />
           <div class="card-body p-4 text-center">
-            <h3 class="fw-bold mb-3" style="color: var(--primary-green);">₹{{ course.price }}</h3>
-            <button class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Enroll Now</button>
+            <h3 class="fw-bold mb-3" style="color: var(--primary-green);">₹{{ course.discount_price }}</h3>
+            {% if course.price > course.discount_price %}
+              <del class="text-muted text-decoration-line-through">₹{{ course.price }}</del>
+            {% endif %}
+
+            <div class="mt-3">
+              {% if user.is_authenticated %}
+                {% if user in course.students.all %}
+                  <a href="{% url 'student_dashboard' %}" class="btn btn-success btn-lg w-100 mb-3 py-3 fw-bold"><i class="fas fa-play-circle me-2"></i> Go to Dashboard</a>
+                {% else %}
+                  <a href="{% url 'enroll_course' course.slug %}" class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Enroll Now</a>
+                {% endif %}
+              {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Login to Enroll</a>
+              {% endif %}
+            </div>
+
             <p class="small text-muted mb-0">
               <i class="fas fa-infinity me-2"></i>Full Lifetime Access
             </p>
           </div>
         </div>
 
-        <div class="card shadow border-0 p-4">
+        <div class="card shadow border-0 p-4" style="background: var(--card-bg);">
           <h5 class="fw-bold mb-3">Instructor Details</h5>
           <div class="d-flex align-items-center mb-3">
-            <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
+            {% if course.teacher.profile.photo %}
+              <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
+            {% else %}
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
+                <i class="fas fa-user fa-lg"></i>
+              </div>
+            {% endif %}
             <div class="ms-3">
-              <h6 class="mb-0 fw-bold">{{ course.teacher.get_full_name }}</h6>
+              <h6 class="mb-0 fw-bold">{{ course.teacher.get_full_name|default:course.teacher.username }}</h6>
               <small class="text-muted">{{ course.teacher.profile.qualification }}</small>
             </div>
           </div>
