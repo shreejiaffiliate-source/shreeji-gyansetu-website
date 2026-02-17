@@ -123,6 +123,19 @@ body {
   color: var(--primary-green);
 }
 
+.live-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px; /* Gives the pulsing badge space to breathe */
+}
+
+/* Optional: If the badge feels too big next to the small price text */
+.card-body .live-badge {
+  padding: 2px 8px;
+  font-size: 0.65rem;
+}
+
 /* Live Indicator Styles */
 .live-badge {
   background-color: #ff0000;

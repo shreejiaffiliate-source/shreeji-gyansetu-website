@@ -123,6 +123,7 @@ class Lesson(models.Model):
     thumbnail = models.ImageField(upload_to='lesson_thumbnails/', blank=True, null=True, help_text="Upload a specific thumbnail for this lesson video")
     video_url = models.URLField(blank=True, null=True, help_text="YouTube or Vimeo Link")
     content_file = models.FileField(upload_to='lessons/', blank=True, null=True)
+    notes_file = models.FileField(upload_to='lesson_notes/', blank=True, null=True, help_text="Upload PDF Notes for this lesson")    
     is_preview = models.BooleanField(default=False, help_text="Check if this is a free demo lesson")
     order = models.PositiveIntegerField(default=0)
 

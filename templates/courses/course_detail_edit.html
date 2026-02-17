@@ -8,7 +8,7 @@
             <h1 class="fw-bold mb-3" style="color: var(--text-dark);">{{ course.title }}</h1>
             <p class="lead text-muted">{{ course.description }}</p>
           </div>
-          <a href="{% url 'edit_course' course.slug %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit Details</a>
+          <a href="{% url 'edit_course' course.slug %}" class="btn btn-outline-primary"><i class="fas fa-edit"></i> Edit</a>
         </div>
 
         <h4 class="mt-5 mb-4 fw-bold" style="color: var(--text-dark);">Course Curriculum</h4>
@@ -28,7 +28,21 @@
                               
                               
                               
+                              
+                              
+                              
+                              
+                              
+                              
+                              
                               fa-play-circle
+
+
+
+
+
+
+
 
 
 
@@ -40,7 +54,21 @@
                               
                               
                               
+                              
+                              
+                              
+                              
+                              
+                              
+                              
                               fa-file-pdf
+
+
+
+
+
+
+
 
 
 
@@ -74,8 +102,8 @@
       </div>
 
       <div class="col-lg-4">
-        <div class="card shadow-sm border-0 sticky-top p-4" style="top: 20px; background: var(--card-bg);">
-          <img src="{{ course.thumbnail.url }}" class="rounded mb-3 w-100" style="height: 180px; object-fit: cover;" />
+        <div class="card shadow-sm border-0 sticky-top p-4" style="top: 20px; background: var(--card-bg); z-index: 10;">
+          <img src="{{ course.thumbnail.url }}" class="rounded mb-3 w-100 shadow-sm" style="height: auto; max-height: 220px; object-fit: contain; background-color: #f8f9fa;" />
           <h5 class="fw-bold">Course Status</h5>
           <p>
             {% if course.is_active %}
@@ -89,7 +117,7 @@
             <span>Price:</span> <span class="fw-bold">₹{{ course.price }}</span>
           </div>
           <div class="d-flex justify-content-between mb-3">
-            <span>Students:</span> <span class="fw-bold text-primary">{{ course.enrollment_count }}</span>
+            <span>Enrolled Students:</span> <span class="fw-bold text-primary">{{ course.enrollment_count }}</span>
           </div>
           <button class="btn btn-outline-danger w-100 btn-sm"><i class="fas fa-archive"></i> Unpublish Course</button>
         </div>

@@ -44,7 +44,7 @@ class ModuleAdmin(admin.ModelAdmin):
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     # Ensure course is at the top
-    fields = ('course', 'module', 'title', 'thumbnail', 'lecturer_name', 'description', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order')
+    fields = ('course', 'module', 'title', 'thumbnail', 'lecturer_name', 'description', 'lesson_type', 'video_url', 'content_file', 'notes_file', 'is_preview', 'order')
     list_display = ('id', 'title', 'lecturer_name', 'course_id', 'module_id', 'lesson_type', 'is_preview', 'order')
     list_filter = ('lesson_type', 'course', 'module')
     
