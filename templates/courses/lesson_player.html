@@ -66,7 +66,7 @@
                 </li>
                 {% if lesson.notes or lesson.notes_file %}
                 <li class="nav-item">
-                    <button class="nav-link fw-bold" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Class Notes <i class="fas fa-pen-fancy ms-1 small text-warning"></i></button>
+                    <button class="nav-link fw-bold" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Class Notes</button>
                 </li>
                 {% endif %}
             </ul>
@@ -87,7 +87,7 @@
                     {% endif %}
                 </div>
                 <hr style="border-color: var(--border-color);" />
-                <div class="lesson-description" style="color: var(--text-dark); opacity: 0.8; line-height: 1.6;">
+                <div class="lesson-description" style="color: var(--text-dark); opacity: 0.8; line-height: 1.6; text-align: justify;">
                     {{ lesson.description|linebreaks }}
                 </div>
             </div>

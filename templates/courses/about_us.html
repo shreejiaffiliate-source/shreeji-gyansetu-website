@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  About Us - Shreeji GyanSetu
+{% endblock %}
+
+{% block content %}
+  <div class="py-5 mb-5" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-cyan));">
+    <div class="container text-center py-5">
+      <h1 class="display-4 fw-bold text-white mb-3">Empowering the Future of Learning</h1>
+      <p class="lead text-white-50 mx-auto" style="max-width: 700px;">Shreeji GyanSetu is a bridge between traditional knowledge and modern innovation, helping students master skills that matter.</p>
+    </div>
+  </div>
+
+  <div class="container mb-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h2 class="fw-bold mb-4" style="color: var(--text-dark);">Our Mission</h2>
+        <p class="text-muted fs-5">Founded in 2026, Shreeji GyanSetu was built on a simple idea: quality education should be accessible, engaging, and result-oriented. We specialize in providing comprehensive courses that prepare students for the competitive world.</p>
+        <p class="text-muted">Whether it's mastering complex coding frameworks or preparing for academic excellence, our platform provides the tools and the community to help you succeed.</p>
+
+        <div class="row mt-4 g-3">
+          <div class="col-6">
+            <div class="p-3 border rounded shadow-sm" style="background: var(--card-bg);">
+              <h3 class="fw-bold text-primary mb-0">{{ total_students }}+</h3>
+              <small class="text-muted">Active Students</small>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 border rounded shadow-sm" style="background: var(--card-bg);">
+              <h3 class="fw-bold text-success mb-0">{{ total_courses }}+</h3>
+              <small class="text-muted">Premium Courses</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center">
+        <img id="theme-aware-logo" src="{% static 'images/shreeji-gyansetu-light.png' %}" data-light="{% static 'images/shreeji-gyansetu-light.png' %}" data-dark="{% static 'images/shreeji-gyansetu-dark.png' %}" class="img-fluid rounded shadow-lg" alt="About Shreeji GyanSetu" />
+      </div>
+    </div>
+  </div>
+
+  <div class="py-5" style="background: var(--bg-light);">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="fw-bold" style="color: var(--text-dark);">Why Choose Us?</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100 border-0 p-4 shadow-sm" style="background: var(--card-bg); border-radius: 20px;">
+            <div class="mb-3 text-primary">
+              <i class="fas fa-chalkboard-teacher fa-3x"></i>
+            </div>
+            <h5 class="fw-bold" style="color: var(--text-dark);">Expert Instructors</h5>
+            <p class="text-muted small">Learn from industry veterans and top educators who bring real-world experience to your screen.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 p-4 shadow-sm" style="background: var(--card-bg); border-radius: 20px;">
+            <div class="mb-3 text-success">
+              <i class="fas fa-infinity fa-3x"></i>
+            </div>
+            <h5 class="fw-bold" style="color: var(--text-dark);">Lifetime Access</h5>
+            <p class="text-muted small">Enroll once and learn forever. Access your course materials anytime, anywhere, on any device.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 p-4 shadow-sm" style="background: var(--card-bg); border-radius: 20px;">
+            <div class="mb-3 text-warning">
+              <i class="fas fa-certificate fa-3x"></i>
+            </div>
+            <h5 class="fw-bold" style="color: var(--text-dark);">Verified Certificates</h5>
+            <p class="text-muted small">Get recognized for your hard work with certificates that help you stand out in your career.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -4,7 +4,7 @@
     <div class="row">
       <div class="col-lg-8">
         <h1 class="fw-bold mb-3 fs-1" style="color: var(--text-dark);">{{ course.title }}</h1>
-        <p class="lead text-muted fs-6">{{ course.description }}</p>
+        <p class="lead text-muted fs-6" style="text-align: justify;">{{ course.description }}</p>
 
         <h4 class="mt-5 mb-4 fw-bold" style="color: var(--text-dark);">Course Curriculum</h4>
 
@@ -57,7 +57,7 @@
 
                         {% if lesson.notes and lesson.is_preview or user in course.students.all or user == course.teacher or user.is_superuser %}
                           <div class="mt-2 ms-5 p-3 rounded" style="background: rgba(0,0,0,0.03); border-left: 3px solid var(--primary-cyan);">
-                            <div class="small text-dark fw-bold mb-1">
+                            <div class="small text-dark fw-bold mb-1" style="color: var(--text-dark) !important;">
                               <i class="fas fa-sticky-note me-2 text-warning"></i>Lesson Note Preview:
                             </div>
                             <div class="small text-muted" style="line-height: 1.5;">

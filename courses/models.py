@@ -51,6 +51,11 @@ class Course(models.Model):
         blank=True
     )
 
+    @property
+    def enrollment_count(self):
+        """Returns the actual count from the ManyToMany relationship"""
+        return self.students.count()
+
     def total_students(self):
         return self.students.count()
 

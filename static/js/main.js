@@ -25,3 +25,33 @@ document.addEventListener("DOMContentLoaded", () => {
     themeIcon.className = savedTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
   }
 });
+
+function updateThemeImage() {
+  const img = document.getElementById("theme-aware-logo");
+  if (!img) return;
+
+  // Check if body has 'dark-mode' class or if data-theme is 'dark'
+  // Adjust the 'document.body.classList.contains' to match your specific dark mode trigger
+  const isDark =
+    document.body.classList.contains("dark-mode") ||
+    document.documentElement.getAttribute("data-theme") === "dark";
+
+  if (isDark) {
+    img.src = img.getAttribute("data-dark");
+  } else {
+    img.src = img.getAttribute("data-light");
+  }
+}
+
+// 1. Run on page load
+document.addEventListener("DOMContentLoaded", updateThemeImage);
+
+// 2. Run whenever the theme toggle button is clicked
+// Assuming your toggle button has an ID 'theme-toggle'
+const toggleBtn = document.getElementById("theme-toggle");
+if (toggleBtn) {
+  toggleBtn.addEventListener("click", () => {
+    // Wait a tiny bit for the class to be applied before checking
+    setTimeout(updateThemeImage, 50);
+  });
+}

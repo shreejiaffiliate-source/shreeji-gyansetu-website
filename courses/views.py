@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseForbidden
+
+from users.models import User
 from .models import MasterCategory, Course, Lesson, Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Module, Profile
-from django.db.models import Q
+from django.db.models import Q, Count, Prefetch
 from django.contrib.auth.decorators import login_required
 from .forms import CourseUploadForm, RegistrationForm, ModuleFormSet
 from django.contrib.auth import login
@@ -10,7 +12,9 @@ def home(request):
     context = {
         'categories': MasterCategory.objects.all().order_by('order'),
         'slides': Carousel.objects.filter(is_active=True),
-        'popular_courses': Course.objects.filter(is_active=True).order_by('-enrollment_count')[:4],
+        'popular_courses': Course.objects.filter(is_active=True)
+                                         .annotate(num_students=Count('students'))
+                                         .order_by('-num_students')[:4],
         'new_courses': Course.objects.filter(is_active=True).order_by('-created_at')[:4],
         'success_stories': SuccessStory.objects.all()[:3],
         'study_materials': StudyMaterial.objects.all().order_by('order'),
@@ -36,7 +40,7 @@ def lesson_detail(request, course_slug, lesson_id):
     user_is_enrolled = request.user.is_authenticated and request.user in course.students.all()
     
     if not (lesson.is_preview or user_is_enrolled):
-        return HttpResponseForbidden("This lesson is locked. Please enroll in the course to view it.")
+        return render(request, 'courses/lesson_locked.html', {'course': course, 'lesson': lesson})
         
 
     # Fetch all modules and lessons for the sidebar navigation
@@ -73,18 +77,36 @@ def register(request):
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+def all_courses(request):
+    # Fetch all categories and the active courses belonging to them
+    categories = MasterCategory.objects.prefetch_related(
+        Prefetch('courses', queryset=Course.objects.filter(is_active=True))
+    ).order_by('order')
+    
+    return render(request, 'courses/all_courses.html', {'categories': categories})
+
+def about_us(request):
+    context = {
+        'total_students': User.objects.filter(profile__user_type='Student').count(),
+        'total_teachers': User.objects.filter(profile__user_type='Teacher').count(),
+        'total_courses': Course.objects.filter(is_active=True).count(),
+    }
+    return render(request, 'courses/about_us.html', context)
+
 @login_required
 def teacher_dashboard(request):
     if request.user.profile.user_type != 'Teacher':
         return HttpResponseForbidden("Access Denied: Teachers Only")
     
-    my_courses = Course.objects.filter(teacher=request.user)
+    my_courses = Course.objects.filter(teacher=request.user).annotate(num_students=Count('students'))
     total_courses = my_courses.count()
-    total_enrollments = sum(course.enrollment_count for course in my_courses)
+    total_enrollments = sum(course.num_students for course in my_courses)
+    actual_student_count = total_enrollments - total_courses
 
     context = {
         'my_course': my_courses,
         'total_courses': total_courses,
+        'total_students': actual_student_count,
         'total_enrollments': total_enrollments
     }
     return render(request, 'courses/teacher_dashboard.html', context)

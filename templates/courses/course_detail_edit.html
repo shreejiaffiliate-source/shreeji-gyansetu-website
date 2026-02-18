@@ -6,7 +6,7 @@
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <h1 class="fw-bold mb-3" style="color: var(--text-dark);">{{ course.title }}</h1>
-            <p class="lead text-muted">{{ course.description }}</p>
+            <p class="lead text-muted fs-6" style="text-align: justify;">{{ course.description }}</p>
           </div>
           <a href="{% url 'edit_course' course.slug %}" class="btn btn-outline-primary"><i class="fas fa-edit"></i> Edit</a>
         </div>
@@ -35,7 +35,11 @@
                               
                               
                               
+                              
+                              
                               fa-play-circle
+
+
 
 
 
@@ -61,7 +65,11 @@
                               
                               
                               
+                              
+                              
                               fa-file-pdf
+
+
 
 
 

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Content Locked - {{ course.title }}
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7 text-center">
+        <div class="mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm" style="width: 100px; height: 100px;">
+            <i class="fas fa-lock fa-3x text-warning"></i>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-lg p-4 p-md-5" style="background: var(--card-bg); border-radius: 20px;">
+          <h2 class="fw-bold mb-3" style="color: var(--text-dark);">This Lesson is Locked</h2>
+          <p class="text-muted mb-4 fs-5">
+            You are trying to access <span class="fw-bold text-primary">"{{ lesson.title }}"</span>. This content is exclusive to enrolled students of the <strong>{{ course.title }}</strong> course.
+          </p>
+
+          <div class="d-flex align-items-center p-3 mb-4 rounded border text-start" style="background: var(--bg-light);">
+            <img src="{{ course.thumbnail.url }}" class="rounded me-3" style="width: 80px; height: 60px; object-fit: cover;" />
+            <div>
+              <h6 class="mb-1 fw-bold" style="color: var(--text-dark);">{{ course.title }}</h6>
+              <span class="text-success fw-bold">₹{{ course.discount_price }}</span>
+            </div>
+          </div>
+
+          <div class="d-grid gap-3 d-sm-flex justify-content-center">
+            <a href="{% url 'enroll_course' course.slug %}" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold btn-enroll"><i class="fas fa-shopping-cart me-2"></i>Enroll Now</a>
+            <a href="{% url 'course_detail' course.slug %}" class="btn btn-outline-secondary btn-lg px-5 rounded-pill fw-bold"><i class="fas fa-info-circle me-2"></i>Course Details</a>
+          </div>
+        </div>
+
+        <p class="mt-4 text-muted small">
+          Already enrolled? <a href="{% url 'login' %}" class="text-decoration-none">Sign in to your account</a>
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
