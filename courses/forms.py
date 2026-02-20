@@ -2,6 +2,8 @@ from django import forms
 from django.forms import inlineformset_factory
 from .models import Course, Module, Lesson
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from .models import Profile
 
 User = get_user_model()
 
@@ -62,3 +64,13 @@ class RegistrationForm(forms.ModelForm):
         if cleaned_data.get("password") != cleaned_data.get("confirm_password"):
             raise forms.ValidationError("Passwords do not match!")
         return cleaned_data
+    
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['photo', 'phone_number', 'address', 'bio']

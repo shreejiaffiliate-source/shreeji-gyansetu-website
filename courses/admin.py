@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
 from django.contrib.admin.exceptions import NotRegistered
 from .models import (
     MasterCategory, Course, Module, Lesson, 
-    Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile
+    Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile, ContactMessage
 )
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # --- INLINES ---
 class LessonInline(admin.TabularInline):
@@ -26,7 +27,21 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'master_category_id', 'price', 'is_active', 'is_live')
     list_filter = ('master_category', 'level', 'is_live', 'is_active')
     prepopulated_fields = {'slug': ('title',)}
+    filter_horizontal = ('students',)
     inlines = [ModuleInline]
+
+    # 1. Filter the Teacher dropdown
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'teacher':
+            kwargs['queryset'] = User.objects.filter(profile__user_type='Teacher')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    # 2. Filter the Students Many-to-Many list
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'students':
+            kwargs['queryset'] = User.objects.filter(profile__user_type='Student')
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
@@ -66,6 +81,13 @@ admin.site.register(SuccessStory)
 admin.site.register(StudyMaterial)
 admin.site.register(YouTubeChannel)
 
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'message', 'created_at', 'is_resolved')
+    list_filter = ('is_resolved', 'created_at')
+    search_fields = ('name', 'email', 'subject')
+    list_editable = ('is_resolved',) # Allow you to mark as resolved directly from the list view
+    
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False

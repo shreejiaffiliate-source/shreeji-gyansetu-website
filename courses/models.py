@@ -48,7 +48,8 @@ class Course(models.Model):
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='enrolled_courses',
-        blank=True
+        blank=True,
+        limit_choices_to=Q(profile__user_type= 'Student')
     )
 
     @property
@@ -208,6 +209,27 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.user_type}"
+    
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False, help_text="Check this once you have replied to the student")
+
+    class Meta:
+        verbose_name_plural = "8. Contact Messages"
+        ordering = ['-created_at']
+
+    def __str__(self): 
+        return f"{self.name} - {self.subject}"
+
+
+
+
+    class Meta:
+        verbose_name_plural = "8. Contact Messages"
     
 # Signals to automatically create a profile when a User is created
 

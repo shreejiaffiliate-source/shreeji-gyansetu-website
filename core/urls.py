@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
@@ -51,6 +51,12 @@ urlpatterns = [
     path('course/<slug:slug>/enroll', enroll_course, name='enroll_course'),
     path('courses/', all_courses, name='all_courses'),
     path('about/', about_us, name='about_us'),
+    path('contact/', contact_us, name='contact_us'),
+    path('profile/edit/', edit_profile, name='edit_profile'),
+    path('password/change/', change_password, name='change_password'),
+    path('admin-console', admin_dashboard, name='admin_dashboard'),
+    path('assign-teacher/<int:course_id>/', assign_teacher, name='assign_teacher'),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
