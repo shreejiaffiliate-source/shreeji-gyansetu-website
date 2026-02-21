@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Live Classes - Shreeji GyanSetu
+{% endblock %}
+
+{% block content %}
+  <div class="container my-5">
+    <div class="text-center mb-5">
+      <div class="d-inline-block px-4 py-2 rounded-pill mb-3" style="background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.2);">
+        <span class="text-danger fw-bold"><i class="fas fa-circle me-2 blink"></i>Ongoing Live Sessions</span>
+      </div>
+      <h1 class="fw-bold" style="color: var(--text-dark);">Live Interactive Classes</h1>
+      <p class="text-muted">Join our expert educators in real-time and clear your doubts instantly.</p>
+    </div>
+
+    <div class="row g-4">
+      {% for course in live_courses %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 course-card shadow-lg border-0" style="background: var(--card-bg); border-radius: 20px; overflow: hidden;">
+            <div class="position-relative">
+              <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;" />
+              <div class="position-absolute top-0 end-0 m-3">
+                <span class="live-badge"><span class="live-dot"></span>LIVE NOW</span>
+              </div>
+            </div>
+
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                {% if course.teacher.profile.photo %}
+                  <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover; border: 1px solid var(--border-color);" />
+                {% else %}
+                  <img src="https://ui-avatars.com/api/?name={{ course.teacher.get_full_name|default:course.teacher.username }}&background=random&color=fff" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;" />
+                {% endif %}
+                <span class="small text-muted">By {{ course.teacher.get_full_name|default:course.teacher.username }}</span>
+              </div>
+
+              <h5 class="card-title fw-bold mb-2" style="color: var(--text-dark);">{{ course.title }}</h5>
+              <p class="card-text text-muted small mb-4">{{ course.description|truncatewords:15 }}</p>
+
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <span class="d-block text-muted small">Live Price</span>
+                  <span class="fw-bold fs-4" style="color: var(--primary-green);">₹{{ course.price }}</span>
+                </div>
+                <div class="text-end">
+                  <span class="d-block text-muted small">Level</span>
+                  <span class="badge bg-primary-soft text-primary">{{ course.level }}</span>
+                </div>
+              </div>
+
+              <a href="{% url 'course_detail' course.slug %}" class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow-sm"><i class="fas fa-play-circle me-2"></i> Join Class Now</a>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center py-5">
+          <div class="mb-4">
+            <i class="fas fa-video-slash fa-4x text-muted opacity-25"></i>
+          </div>
+          <h4 class="text-muted">No live classes are currently scheduled.</h4>
+          <p class="text-muted">Please check back later or browse our recorded courses.</p>
+          <a href="{% url 'all_courses' %}" class="btn btn-outline-primary rounded-pill px-4 mt-3">Browse All Courses</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <style>
+    .blink {
+      animation: blinker 1.5s linear infinite;
+    }
+    @keyframes blinker {
+      50% {
+        opacity: 0;
+      }
+    }
+    .bg-primary-soft {
+      background-color: rgba(0, 109, 160, 0.1);
+    }
+  </style>
+{% endblock %}

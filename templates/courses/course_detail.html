@@ -109,7 +109,7 @@
         </div>
 
         <div class="card shadow border-0 p-4" style="background: var(--card-bg);">
-          <h5 class="fw-bold mb-3">Instructor Details</h5>
+          <h5 class="fw-bold mb-3" style="color: var(--text-dark);">Instructor Details</h5>
           <div class="d-flex align-items-center mb-3">
             {% if course.teacher.profile.photo %}
               <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
@@ -119,7 +119,7 @@
               </div>
             {% endif %}
             <div class="ms-3">
-              <h6 class="mb-0 fw-bold">{{ course.teacher.get_full_name|default:course.teacher.username }}</h6>
+              <h6 class="mb-0 fw-bold" style="color: var(--text-dark);">{{ course.teacher.get_full_name|default:course.teacher.username }}</h6>
               <small class="text-muted">{{ course.teacher.profile.qualification }}</small>
             </div>
           </div>

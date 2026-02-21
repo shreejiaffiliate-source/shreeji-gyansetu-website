@@ -7,147 +7,300 @@
   <style>
     :root {
       --sidebar-width: 260px;
-      --sidebar-bg: #2c3e50; /* Matching the dark blue in your image */
+      --sidebar-collapsed-width: 80px;
     }
     
+    /* 1. Viewport Control */
+    html,
     body {
-      background-color: #f4f7fe;
+      height: 100%;
+      overflow: hidden; /* Only the main-content should scroll */
+      background-color: var(--bg-light) !important;
     }
     
-    /* Sidebar Styling */
     .dashboard-wrapper {
       display: flex;
-      min-height: 100vh;
+      height: 100vh;
+      width: 100%;
     }
     
+    /* 2. Sidebar - Top Priority */
     .sidebar {
       width: var(--sidebar-width);
-      background-color: var(--sidebar-bg);
+      background-color: var(--primary-dblue);
       color: white;
       position: fixed;
-      height: 100vh;
-      z-index: 1000;
-      transition: all 0.3s;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 1100; /* Higher than Navbar and Footer */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
     }
     
     .sidebar-header {
-      padding: 20px;
-      text-align: center;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .sidebar-menu {
-      list-style: none;
-      padding: 20px 0;
-      margin: 0;
+      flex-shrink: 0;
     }
     
+    .logo-text {
+      font-weight: 800;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .sidebar.collapsed .logo-text {
+      display: none;
+    }
+    
+    /* 3. Navigation */
+    .sidebar-menu {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
     .sidebar-menu li a {
-      padding: 12px 25px;
+      padding: 15px 25px;
       display: flex;
       align-items: center;
       color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
-      transition: 0.3s;
-      font-weight: 500;
+      transition: 0.2s;
+      white-space: nowrap;
+      border-left: 4px solid transparent;
     }
-    
-    .sidebar-menu li a:hover,
-    .sidebar-menu li.active a {
-      color: white;
-      background: rgba(255, 255, 255, 0.1);
-      border-left: 4px solid var(--primary-cyan);
-    }
-    
     .sidebar-menu li a i {
-      width: 30px;
-      font-size: 1.1rem;
+      min-width: 30px;
+      font-size: 1.2rem;
+      margin-right: 15px;
+      text-align: center;
+    }
+    .sidebar-menu li.active a,
+    .sidebar-menu li a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-left-color: var(--primary-green);
+    }
+    .menu-text {
+      transition: opacity 0.2s;
+    }
+    .sidebar.collapsed .menu-text {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mt-auto {
+      margin-top: auto;
     }
     
-    /* Content Area */
+    /* 4. Layout Shifting (The Magic Part) */
+    .main-content,
+    .navbar,
+    footer {
+      margin-left: var(--sidebar-width);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .main-content.expanded,
+    .navbar.expanded,
+    footer.expanded {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+    
+    /* 5. Fixed Elements */
     .main-content {
       flex: 1;
-      margin-left: var(--sidebar-width);
       padding: 30px;
+      overflow-y: auto;
+      padding-bottom: 250px; /* Space for the fixed footer */
     }
     
-    /* Profile Dropdown Customization */
-    .profile-dropdown {
-      min-width: 250px;
-      padding: 15px;
-      border-radius: 12px;
+    footer {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: auto;
+      background-color: var(--card-bg) !important;
+      z-index: 1040;
+      padding-left: var(--sidebar-width);
+      transition: all 0.3 cubic-bezier(0.4, 0 0.2, 1);
+      border-top: 1px solid var(--border-color);
     }
-    .profile-info {
-      padding-bottom: 10px;
-      border-bottom: 1px solid #eee;
-      margin-bottom: 10px;
+    
+    footer .container {
+      max-width: 100%;
+      padding: 20px;
+    }
+    
+    footer .row {
+      display: flex;
+      flex-wrap: wrap; /* Allows columns to drop to next line if tight */
+    }
+    
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1050;
+    }
+    
+    /* 6. Mobile Logic */
+    @media (max-width: 991px) {
+      html,
+      body {
+        overflow: auto;
+      }
+      .sidebar {
+        left: calc(-1 * var(--sidebar-width));
+      }
+      .sidebar.active {
+        left: 0;
+      }
+      .main-content,
+      .navbar {
+        margin-left: 0 !important;
+        padding-left: 15px !important;
+      }
+      footer {
+        position: relative;
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+      .main-content {
+        padding-bottom: 30px !important;
+      }
     }
   </style>
 {% endblock %}
 
 {% block content %}
   <div class="dashboard-wrapper">
-    <nav class="sidebar">
+    <nav class="sidebar shadow" id="sidebar">
       <div class="sidebar-header">
-        <h4 class="fw-bold mb-0">KGS</h4>
+        <span class="logo-text">SHREEJI GYANSETU</span>
       </div>
       <ul class="sidebar-menu">
         <li class="active">
-          <a href="#"><i class="fas fa-th-large"></i> Dashboard</a>
+          <a href="#"><i class="fas fa-th-large"></i> <span class="menu-text">Dashboard</span></a>
         </li>
         <li>
-          <a href="#"><i class="fas fa-video"></i> Live Classes</a>
+          <a href="{% url 'live_classes' %}"><i class="fas fa-video"></i> <span class="menu-text">Live Classes</span></a>
         </li>
         <li>
-          <a href="#"><i class="fas fa-book"></i> My Classes</a>
+          <a href="{% url 'all_courses' %}"><i class="fas fa-graduation-cap"></i> <span class="menu-text">Explore Courses</span></a>
         </li>
         <li>
-          <a href="#"><i class="fas fa-edit"></i> Answer Writing</a>
+          <a href="#"><i class="fas fa-file-alt"></i> <span class="menu-text">Study Material</span></a>
         </li>
         <li>
-          <a href="#"><i class="fas fa-graduation-cap"></i> Courses</a>
+          <a href="{% url 'edit_profile' %}"><i class="fas fa-user-edit"></i> <span class="menu-text">Edit Profile</span></a>
         </li>
+        <hr style="opacity: 0.1; margin: 10px 20px;" />
         <li>
-          <a href="#"><i class="fas fa-file-alt"></i> Study Materials</a>
+          <form method="post" action="{% url 'logout' %}" id="logout-form" style="display: none;">
+            {% csrf_token %}
+          </form>
+          <a href="javascript:void(0)" onclick="document.getElementById('logout-form').submit();" class="text-danger"><i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span></a>
         </li>
-        <li>
-          <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <li class="mt-auto">
+          <a href="javascript:void(0)" id="toggleSidebar" class="toggle-link">
+            <i class="fas fa-chevron-left" id="toggleIcon"></i>
+            <span class="menu-text ms-2">Collapse</span>
+          </a>
         </li>
       </ul>
     </nav>
 
-    <main class="main-content">
+    <main class="main-content" id="main-content">
       <div class="row mb-4">
         <div class="col-md-12">
-          <div class="card border-0 shadow-sm p-4" style="border-radius: 15px;">
-            <h5 class="fw-bold">Your Dashboard Today</h5>
-            <p class="text-muted small">Hello {{ full_name }}, Welcome Back!</p>
+          <div class="card dashboard-card shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border-color);">
+            <h5 class="fw-bold" style="color: var(--text-dark);">Your Dashboard Today</h5>
+            <p class="text-muted small mb-0">Hello {{ user.get_full_name|default:user.username }}, Welcome Back!</p>
           </div>
         </div>
       </div>
 
       <div class="row g-4">
-        <h5 class="fw-bold px-3">Enrolled Courses</h5>
+        <div class="col-12 d-flex justify-content-between align-items-center px-3">
+          <h5 class="fw-bold mb-0" style="color: var(--text-dark);">Enrolled Courses</h5>
+          <span class="badge bg-primary text-white rounded-pill px-3">{{ enrolled_courses.count }} Courses</span>
+        </div>
         {% for course in enrolled_courses %}
-          <div class="col-lg-6 col-md-12">
-            <div class="card h-100 border-0 shadow-sm" style="background: var(--card-bg); border-radius: 20px; transition: transform 0.3s;">
+          <div class="col-lg-6 col-xl-4">
+            <div class="card h-100 border-0 shadow-sm dashboard-card overflow-hidden" style="background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border-color);">
               <div class="row g-0">
                 <div class="col-4">
-                  <img src="{{ course.thumbnail.url }}" class="img-fluid rounded-start h-100" style="object-fit: cover;" />
+                  <img src="{{ course.thumbnail.url }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 120px;" />
                 </div>
                 <div class="col-8">
-                  <div class="card-body p-4">
-                    <h6 class="fw-bold mb-1">{{ course.title }}</h6>
-                    <p class="text-muted small mb-3">Live + Recorded / Hindi / English</p>
-                    <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary px-3 rounded-pill">View</a>
+                  <div class="card-body p-3">
+                    <h6 class="fw-bold mb-1" style="color: var(--text-dark);">{{ course.title }}</h6>
+                    <p class="text-muted small mb-2">Live + Recorded</p>
+                    <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary px-3 rounded-pill">Continue</a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         {% empty %}
-
+          <div class="col-12 text-center py-5">
+            <i class="fas fa-book-open fa-3x text-muted opacity-25 mb-3"></i>
+            <h6 class="text-muted">No enrollments yet.</h6>
+            <a href="{% url 'all_courses' %}" class="btn btn-primary rounded-pill mt-2 px-4">Browse Courses</a>
+          </div>
         {% endfor %}
       </div>
     </main>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebar = document.getElementById('sidebar')
+      const mainContent = document.getElementById('main-content')
+      const toggleBtn = document.getElementById('toggleSidebar')
+      const footer = document.querySelector('footer')
+      const navbar = document.querySelector('.navbar')
+      const toggleIcon = document.getElementById('toggleIcon')
+    
+      function setSidebarState(isCollapsed) {
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed')
+          mainContent.classList.add('expanded')
+          if (footer) footer.classList.add('expanded')
+          if (navbar) navbar.classList.add('expanded')
+        } else {
+          sidebar.classList.remove('collapsed')
+          mainContent.classList.remove('expanded')
+          if (footer) footer.classList.remove('expanded')
+          if (navbar) navbar.classList.remove('expanded')
+        }
+      }
+    
+      // Initialize state
+      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true'
+      setSidebarState(isCollapsed)
+    
+      toggleBtn.addEventListener('click', () => {
+        const newState = !sidebar.classList.contains('collapsed')
+        setSidebarState(newState)
+        localStorage.setItem('sidebar-collapsed', newState)
+      })
+    })
+  </script>
 {% endblock %}

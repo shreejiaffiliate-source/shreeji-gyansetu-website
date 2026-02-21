@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher, live_classes
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
@@ -56,6 +56,7 @@ urlpatterns = [
     path('password/change/', change_password, name='change_password'),
     path('admin-console', admin_dashboard, name='admin_dashboard'),
     path('assign-teacher/<int:course_id>/', assign_teacher, name='assign_teacher'),
+    path('live-classes/', live_classes , name='live_classes')
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

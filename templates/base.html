@@ -30,7 +30,9 @@
                 
                 
                 
+                
                 var(--primary-green)
+
 
 
 
@@ -40,7 +42,9 @@
                 
                 
                 
+                
                 #dc3545
+
 
 
 
@@ -98,25 +102,22 @@
               <div class="dropdown">
                 <button class="btn btn-outline-primary dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown">Hi, {{ user.first_name|default:user.username }}</button>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 profile-dropdown p-3" style="min-width: 280px; border-radius: 15px;">
-                  <div class="profile-header pb-2 mb-2 border-bottom">
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 profile-dropdown p-3" style="min-width: 280px; border-radius: 15px; background: var(--card-bg); color: var(--text-dark);">
+                  <div class="profile-header pb-2 mb-2" style="border-bottom: 1px solid var(--border-color);">
                     <div class="d-flex align-items-center mb-2">
-                      {# Check if user has a profile and the photo url exists and isn't the default error string #}
                       {% if user.profile.photo and 'default_user' not in user.profile.photo.url %}
                         <img src="{{ user.profile.photo.url }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary-cyan);" />
                       {% else %}
-                        {# This is the UI-Avatar that shows 'PA' #}
                         <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username }}&background=random&size=128" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary-cyan);" />
                       {% endif %}
                       <div>
-                        <h6 class="fw-bold mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                        <h6 class="fw-bold mb-0" style="color: var(--text-dark);">{{ user.get_full_name|default:user.username }}</h6>
                         <small class="text-muted">{{ user.username }}</small>
                       </div>
                     </div>
 
                     <small class="text-muted d-block">
                       <i class="fas fa-phone-alt me-2"></i>
-                      {# Clean phone number logic #}
                       {% if user.profile.phone_number and 'default_user' not in user.profile.phone_number %}
                         +91 {{ user.profile.phone_number }}
                       {% else %}
@@ -127,28 +128,30 @@
 
                   <li>
                     {% if user.profile.user_type == 'Admin' %}
-                      <a class="dropdown-item py-2" href="{% url 'admin_dashboard' %}"><i class="fas fa-user-shield me-3"></i>Admin Console</a>
+                      <a class="dropdown-item py-2 rounded-2" href="{% url 'admin_dashboard' %}"><i class="fas fa-user-shield me-3"></i>Admin Console</a>
                     {% elif user.profile.user_type == 'Teacher' %}
-                      <a class="dropdown-item py-2" href="{% url 'teacher_dashboard' %}"><i class="fas fa-chalkboard-teacher me-3"></i>Dashboard</a>
+                      <a class="dropdown-item py-2 rounded-2" href="{% url 'teacher_dashboard' %}"><i class="fas fa-chalkboard-teacher me-3"></i>Dashboard</a>
                     {% else %}
-                      <a class="dropdown-item py-2" href="{% url 'student_dashboard' %}"><i class="fas fa-th-large me-3"></i>My Dashboard</a>
+                      <a class="dropdown-item py-2 rounded-2" href="{% url 'student_dashboard' %}"><i class="fas fa-th-large me-3"></i>My Dashboard</a>
                     {% endif %}
                   </li>
+
                   <li>
-                    <a class="dropdown-item py-2" href="{% url 'edit_profile' %}"><i class="fas fa-user-edit me-3"></i> Edit Profile</a>
+                    <a class="dropdown-item py-2 rounded-2" href="{% url 'edit_profile' %}"><i class="fas fa-user-edit me-3"></i> Edit Profile</a>
                   </li>
                   <li>
-                    <a class="dropdown-item py-2" href="{% url 'change_password' %}"><i class="fas fa-key me-3"></i> Change Password</a>
+                    <a class="dropdown-item py-2 rounded-2" href="{% url 'change_password' %}"><i class="fas fa-key me-3"></i> Change Password</a>
                   </li>
                   <li>
-                    <a class="dropdown-item py-2" href="#"><i class="fas fa-question-circle me-3"></i> Doubts</a>
+                    <a class="dropdown-item py-2 rounded-2" href="#"><i class="fas fa-question-circle me-3"></i> Doubts</a>
                   </li>
 
-                  <hr class="dropdown-divider" />
+                  <hr class="dropdown-divider" style="background-color: var(--border-color); opacity: 0.2;" />
+
                   <li>
                     <form method="post" action="{% url 'logout' %}">
                       {% csrf_token %}
-                      <button type="submit" class="dropdown-item text-danger py-2"><i class="fas fa-sign-out-alt me-3"></i>Logout</button>
+                      <button type="submit" class="dropdown-item text-danger py-2 rounded-2"><i class="fas fa-sign-out-alt me-3"></i>Logout</button>
                     </form>
                   </li>
                 </ul>
@@ -182,10 +185,10 @@
             <h6 class="fw-bold">Company</h6>
             <ul class="list-unstyled small">
               <li>
-                <a href="#" class="text-muted text-decoration-none">About Us</a>
+                <a href="{% url 'about_us' %}" class="text-muted text-decoration-none">About Us</a>
               </li>
               <li>
-                <a href="#" class="text-muted text-decoration-none">Contact Us</a>
+                <a href="{% url 'contact_us' %}" class="text-muted text-decoration-none">Contact Us</a>
               </li>
               <li>
                 <a href="#" class="text-muted text-decoration-none">Careers</a>

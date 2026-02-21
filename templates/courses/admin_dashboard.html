@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="fas fa-user-shield me-2"></i>Admin Management Console</h2>
+        <h2 class="fw-bold"><i class="fas fa-user-shield me-2 text-success"></i>Admin Management Console</h2>
         <div class="badge bg-danger p-2 px-3">Master Access</div>
     </div>
 
@@ -10,19 +10,19 @@
         <div class="col-md-4">
             <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg); border-bottom: 4px solid var(--primary-blue);">
                 <h6 class="text-muted">Total Platform Students</h6>
-                <h3 class="fw-bold">{{ platform_students }}</h3>
+                <h3 class="fw-bold" style="color: var(--text-dark);">{{ platform_students }}</h3>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg); border-bottom: 4px solid var(--primary-green);">
                 <h6 class="text-muted">Total Courses</h6>
-                <h3 class="fw-bold">{{ all_courses.count }}</h3>
+                <h3 class="fw-bold" style="color: var(--text-dark);">{{ all_courses.count }}</h3>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg); border-bottom: 4px solid #ffc107;">
                 <h6 class="text-muted">Est. Total Revenue</h6>
-                <h3 class="fw-bold">₹{{ total_revenue }}</h3>
+                <h3 class="fw-bold" style="color: var(--text-dark);">₹{{ total_revenue }}</h3>
             </div>
         </div>
     </div>

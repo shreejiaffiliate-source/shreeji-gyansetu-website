@@ -94,6 +94,12 @@ def register(request):
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+def live_classes(request):
+    return render(request, 'courses/live_classes.html', {
+        'live_courses': Course.objects.filter(is_live=True)
+    })
+
+
 @login_required
 def login_success(request):
     if not hasattr(request.user, 'profile'):

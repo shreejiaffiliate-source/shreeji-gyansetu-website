@@ -195,6 +195,9 @@ class Profile(models.Model):
     photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user.png')
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
+    college_name = models.CharField(max_length=200, blank=True, null=True)
+    branch = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. Computer Science")
+
 
     # Teacher Specific Information
 

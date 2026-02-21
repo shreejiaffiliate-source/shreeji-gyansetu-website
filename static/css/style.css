@@ -2,10 +2,13 @@
   --primary-blue: #0b4378;
   --primary-green: #168e43;
   --primary-cyan: #006da0;
+  --primary-dblue: #0b4378;
+
   --bg-light: #f8f9fa;
   --text-dark: #2d3436;
   --card-bg: #ffffff;
   --border-color: #eee;
+  --text-muted-adaptive: #6c757d;
 }
 
 [data-theme="dark"] {
@@ -13,7 +16,10 @@
   --text-dark: #e0e0e0;
   --card-bg: #1e1e1e;
   --border-color: #333;
-  --primary-blue: #2a7fd1; /* Adjusted for better visibility on dark */
+  --primary-blue: #2a7fd1;
+  --primary-dblue: #08335c;
+
+  --text-muted-adaptive: #adb5bd; /* Adjusted for better visibility on dark */
 }
 
 body {
@@ -382,6 +388,52 @@ body {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+/* Make Django form inputs adaptive */
+.card form input[type="text"],
+.card form input[type="email"],
+.card form input[type="file"],
+.card form textarea {
+  background-color: var(--bg-light) !important;
+  color: var(--text-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px;
+  padding: 10px;
+  width: 100%;
+}
+
+/* Specific fix for the file upload button in dark mode */
+input[type="file"]::file-selector-button {
+  background-color: var(--primary-cyan);
+  color: #000;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 5px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+[data-theme="dark"] input[type="file"] {
+  color: #adb5bd;
+}
+
+/* Ensure dropdown items inherit the theme text color */
+.profile-dropdown .dropdown-item {
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+}
+
+/* Custom hover state for adaptive theme */
+.profile-dropdown .dropdown-item:hover {
+  background-color: var(--bg-light); /* Slightly lighter/darker than card-bg */
+  color: var(--primary-cyan); /* Or your primary color */
+}
+
+/* Fix for the logout button hover */
+.profile-dropdown .dropdown-item.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1); /* Light red tint */
+  color: #dc3545;
+}
+
 /* --- Fix for Accordion Adaptive Colors --- */
 .accordion-button:not(.collapsed) {
   background-color: var(--primary-blue) !important;
@@ -505,6 +557,86 @@ footer a.text-decoration-none:hover {
 .card-body.bg-dark.text-white p,
 .card-body.bg-dark.text-white h6 {
   color: white !important;
+}
+
+/* Placeholder styling for Light Theme (Default) */
+.form-control::placeholder {
+  color: #6c757d; /* Standard muted gray */
+  opacity: 0.8;
+}
+
+/* Placeholder styling for Dark Theme */
+[data-theme="dark"] .form-control::placeholder {
+  color: #adb5bd; /* Lighter gray for better visibility on dark backgrounds */
+  opacity: 0.6;
+}
+
+/* Ensure the input text itself is adaptive */
+.form-control {
+  background-color: var(--bg-light); /* Uses your existing variable */
+  color: var(--text-dark); /* Uses your existing variable */
+  border: 1px solid var(--border-color);
+}
+
+/* Fix for focus state in dark mode */
+[data-theme="dark"] .form-control:focus {
+  background-color: #2b2b2b; /* Slightly lighter than the card bg */
+  color: #ffffff;
+  border-color: var(--primary-cyan);
+  box-shadow: 0 0 0 0.25rem rgba(0, 255, 255, 0.25);
+}
+
+/* Final fix for the jumping eye button */
+.input-group {
+  display: flex !important;
+  align-items: stretch !important; /* Forces all children to be same height */
+}
+
+.input-group .form-control {
+  flex: 1 1 auto; /* Ensures input takes up remaining space */
+}
+
+.toggle-password {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 12px !important; /* Consistent horizontal spacing */
+  height: auto !important; /* Allows flex 'stretch' to work */
+  margin: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  line-height: 1 !important; /* Prevents text-line height shifts */
+}
+
+/* Ensure the icon itself is centered */
+.toggle-password i {
+  width: 1.25rem;
+  text-align: center;
+}
+
+/* Specific fix for the Register As dropdown and all select elements */
+select,
+.form-select {
+  background-color: var(--bg-light) !important;
+  color: var(--text-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 16px 12px !important;
+  appearance: none; /* Removes default browser styling */
+}
+
+/* Fix for the dropdown options in Dark Mode */
+select option {
+  background-color: var(--card-bg);
+  color: var(--text-dark);
+}
+
+/* Adjust the arrow color for dark mode */
+[data-theme="dark"] select,
+[data-theme="dark"] .form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
 }
 
 /* Footer */

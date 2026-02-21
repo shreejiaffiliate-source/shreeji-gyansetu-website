@@ -73,4 +73,20 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['photo', 'phone_number', 'address', 'bio']
+        fields = ['photo', 'phone_number', 'address', 'bio',
+                  'qualification', 'experience_years',
+                  'enrollment_number', 'date_of_birth', 'college_name', 'branch']
+        
+        widgets = {
+            'photo': forms.FileInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'qualification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. M.Sc in Physics'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control'}),
+            'enrollment_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'college_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. IIT Delhi'}),
+            'branch': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Mechanical, IT'}),
+        
+        }

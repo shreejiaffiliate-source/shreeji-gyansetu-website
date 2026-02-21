@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
   {% load static %}
-  <div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+  <div class="container d-flex align-items-center justify-content-center pt-4" style="min-height: 80vh;">
     <div class="card border-0 shadow-lg p-4" style="width: 100%; max-width: 450px; border-radius: 20px; background: var(--card-bg);">
       <div class="text-center mb-4">
         <img src="{% static 'images/logo.png' %}" alt="Logo" height="60" class="mb-3" />
@@ -11,20 +11,22 @@
 
       <form method="POST">
         {% csrf_token %}
+
         <div class="mb-3">
           <label class="form-label fw-semibold" style="color: var(--text-dark);">Username</label>
-          <div class="input-group">
-            <span class="input-group-text bg-light border-0"><i class="fas fa-user text-primary"></i></span>
-            <input type="text" name="username" class="form-control border-0 bg-light" placeholder="Enter username" required />
+          <div class="position-relative d-flex align-items-center">
+            <i class="fas fa-user position-absolute ms-3" style="color: var(--primary-blue); z-index: 5;"></i>
+            <input type="text" name="username" class="form-control rounded-3 ps-5" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);" placeholder="Enter username" required />
           </div>
         </div>
 
         <div class="mb-4">
           <label class="form-label fw-semibold" style="color: var(--text-dark);">Password</label>
-          <div class="input-group">
-            <span class="input-group-text bg-light border-0"><i class="fas fa-lock text-primary"></i></span>
-            <input type="password" name="password" id="id_password" class="form-control border-0 bg-light" placeholder="Enter password" required />
-            <button class="btn btn-outline-secondary rounded-end-3 toggle-password" type="button" data-target="id_password"><i class="fas fa-eye"></i></button>
+          <div class="position-relative d-flex align-items-center">
+            <i class="fas fa-lock position-absolute ms-3" style="color: var(--primary-blue); z-index: 5;"></i>
+            <input type="password" name="password" id="id_password" class="form-control rounded-3 ps-5 pe-5" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);" placeholder="Enter password" required />
+
+            <button class="btn border-0 position-absolute end-0 me-2 p-0 toggle-password" type="button" onclick="togglePasswordVisibility('id_password', this)" style="background: transparent; color: var(--text-dark); width: 40px; height: 100%; z-index: 10;"><i class="fas fa-eye"></i></button>
           </div>
         </div>
 
@@ -32,12 +34,28 @@
 
         <div class="text-center">
           <a href="#" class="text-decoration-none small text-muted">Forgot password?</a>
-          <hr class="my-4" />
-          <p class="small mb-0">
-            Don't have an account? <a href="{% url 'register' %}" class="fw-bold text-primary">Register Now</a>
+          <hr class="my-4" style="border-color: var(--border-color); opacity: 0.2;" />
+          <p class="small mb-0" style="color: var(--text-dark);">
+            Don't have an account? <a href="{% url 'register' %}" class="fw-bold" style="color: var(--primary-cyan);">Register Now</a>
           </p>
         </div>
       </form>
     </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId)
+      const icon = btn.querySelector('i')
+      if (input.type === 'password') {
+        input.type = 'text'
+        icon.classList.replace('fa-eye', 'fa-eye-slash')
+      } else {
+        input.type = 'password'
+        icon.classList.replace('fa-eye-slash', 'fa-eye')
+      }
+    }
+  </script>
 {% endblock %}

@@ -79,7 +79,7 @@
                     <div>
                       <h2 class="fw-bold mb-1" style="color: var(--text-dark);">{{ lesson.title }}</h2>
                       <p class="mb-0" style="color: var(--primary-cyan); font-weight: 600;">
-                        <i class="fas fa-user-tie me-2"></i>Lecturer: {{ lesson.lecturer_name }}
+                        <i class="fas fa-user-tie me-2"></i>Lecturer: {{ course.teacher.get_full_name|default:course.teacher.username }}
                       </p>
                     </div>
                     {% if lesson.is_preview %}
