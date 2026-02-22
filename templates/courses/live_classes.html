@@ -32,7 +32,7 @@
                 {% else %}
                   <img src="https://ui-avatars.com/api/?name={{ course.teacher.get_full_name|default:course.teacher.username }}&background=random&color=fff" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;" />
                 {% endif %}
-                <span class="small text-muted">By {{ course.teacher.get_full_name|default:course.teacher.username }}</span>
+                <a href="{% url 'teacher_detail' course.teacher.username %}" class="text-decoration-none"><span class="small text-muted">By {{ course.teacher.get_full_name|default:course.teacher.username }}</span></a>
               </div>
 
               <h5 class="card-title fw-bold mb-2" style="color: var(--text-dark);">{{ course.title }}</h5>

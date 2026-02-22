@@ -110,20 +110,27 @@
 
         <div class="card shadow border-0 p-4" style="background: var(--card-bg);">
           <h5 class="fw-bold mb-3" style="color: var(--text-dark);">Instructor Details</h5>
-          <div class="d-flex align-items-center mb-3">
-            {% if course.teacher.profile.photo %}
-              <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
-            {% else %}
-              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
-                <i class="fas fa-user fa-lg"></i>
+
+          <a href="{% url 'teacher_detail' course.teacher.username %}" class="text-decoration-none teacher-link">
+            <div class="d-flex align-items-center mb-3">
+              {% if course.teacher.profile.photo %}
+                <img src="{{ course.teacher.profile.photo.url }}" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
+              {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
+                  <i class="fas fa-user fa-lg"></i>
+                </div>
+              {% endif %}
+
+              <div class="ms-3">
+                <h6 class="mb-0 fw-bold" style="color: var(--text-dark);">{{ course.teacher.get_full_name|default:course.teacher.username }}</h6>
+                <small class="text-muted">{{ course.teacher.profile.qualification }}</small>
               </div>
-            {% endif %}
-            <div class="ms-3">
-              <h6 class="mb-0 fw-bold" style="color: var(--text-dark);">{{ course.teacher.get_full_name|default:course.teacher.username }}</h6>
-              <small class="text-muted">{{ course.teacher.profile.qualification }}</small>
             </div>
-          </div>
+          </a>
+
           <p class="small text-muted">{{ course.teacher.profile.bio|truncatewords:20 }}</p>
+
+          <a href="{% url 'teacher_detail' course.teacher.username %}" class="btn btn-sm btn-outline-primary rounded-pill w-100 mt-2">View Full Profile</a>
         </div>
       </div>
     </div>

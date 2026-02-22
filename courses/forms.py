@@ -74,7 +74,7 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['photo', 'phone_number', 'address', 'bio',
-                  'qualification', 'experience_years',
+                  'gender', 'qualification', 'experience_years',
                   'enrollment_number', 'date_of_birth', 'college_name', 'branch']
         
         widgets = {
@@ -88,5 +88,6 @@ class ProfileUpdateForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'college_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. IIT Delhi'}),
             'branch': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Mechanical, IT'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
         
         }

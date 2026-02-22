@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container my-5 text-center">
+    <div class="card shadow border-0 p-5 mx-auto" style="max-width: 600px; background: var(--card-bg); border-radius: 20px;">
+      <div class="mb-4">
+        <i class="fas fa-user-clock fa-4x text-warning"></i>
+      </div>
+
+      <h2 class="fw-bold mb-3" style="color: var(--text-dark);">
+        {% if user.first_name %}
+          Hi {{ user.first_name }}, hold tight!
+        {% else %}
+          Account Under Review
+        {% endif %}
+      </h2>
+
+      <p class="text-muted fs-5">Your application to become a teacher at Shreeji GyanSetu is currently being processed.</p>
+
+      <div class="alert alert-info border-0 shadow-sm my-4 text-start" style="background: rgba(13, 202, 240, 0.1); color: var(--text-dark);">
+        <ul class="mb-0 small">
+          <li>Our admin team is verifying your credentials.</li>
+          <li>
+            An email will be sent to <strong>{{ user.email }}</strong> once you are approved.
+          </li>
+          <li>After approval, you can log in to start creating courses.</li>
+        </ul>
+      </div>
+
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-home me-2"></i>Back to Home</a>
+        <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4"><i class="fas fa-sign-in-alt me-2"></i>Try Login Again</a>
+      </div>
+
+      <p class="mt-4 small text-muted">
+        Need help? <a href="mailto:support@shreejigyansetu.com" class="text-decoration-none">Contact Support</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

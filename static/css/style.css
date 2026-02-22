@@ -503,6 +503,15 @@ input[type="file"]::file-selector-button {
   filter: brightness(0) invert(1);
 }
 
+.teacher-link:hover h6 {
+  color: var(--primary-cyan) !important;
+  transition: color 0.2s ease;
+}
+.teacher-link:hover img {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
 /* Ensure all tables are theme-adaptive */
 .table {
   color: var(--text-dark) !important;

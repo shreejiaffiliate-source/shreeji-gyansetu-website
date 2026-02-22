@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {{ teacher.get_full_name }} - Instructor Detail
+{% endblock %}
+
+{% block content %}
+  <div class="container my-5">
+    <div class="card border-0 shadow-sm p-4 p-md-5" style="background: var(--card-bg); border-radius: 20px;">
+      <div class="row g-5">
+        <div class="col-lg-4 text-center">
+          <div class="teacher-image-wrapper p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 15px;">
+            {% if teacher.profile.photo %}
+              <img src="{{ teacher.profile.photo.url }}" class="img-fluid" style="border-radius: 10px; width: 100%; object-fit: cover;" />
+            {% else %}
+              <img src="https://ui-avatars.com/api/?name={{ teacher.get_full_name }}&size=300" class="img-fluid" style="border-radius: 10px;" />
+            {% endif %}
+          </div>
+          <span class="badge px-4 py-2 rounded-pill" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);">Teacher</span>
+        </div>
+
+        <div class="col-lg-8">
+          <h2 class="fw-bold mb-1" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</h2>
+          <p class="text-primary fw-semibold mb-4">{{ teacher.profile.qualification|default:'Senior Instructor' }}</p>
+
+          <div class="teacher-bio" style="color: var(--text-dark); line-height: 1.8;">
+            <p class="mb-4">{{ teacher.profile.bio|linebreaks }}</p>
+
+            {% if teacher.profile.experience_years %}
+              <div class="d-flex align-items-center mt-4">
+                <div class="me-4 text-center">
+                  <h4 class="fw-bold mb-0 text-primary">{{ teacher.profile.experience_years }}+</h4>
+                  <small class="text-muted">Years Exp.</small>
+                </div>
+                <div class="text-center">
+                  <h4 class="fw-bold mb-0 text-primary">{{ courses.count }}</h4>
+                  <small class="text-muted">Courses</small>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <h4 class="fw-bold mb-4" style="color: var(--text-dark);">
+        Courses by {{ teacher.first_name }}
+        {% if teacher.profile.gender == 'Male' %}
+          Sir
+        {% elif teacher.profile.gender == 'Female' %}
+          Mam
+        {% endif %}
+      </h4>
+      <div class="row g-4">
+        {% for course in courses %}
+          <div class="col-md-4 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
+              <img src="{{ course.thumbnail.url }}" class="card-img-top" style="height: 160px; object-fit: cover;" />
+              <div class="card-body">
+                <h6 class="fw-bold mb-2">{{ course.title }}</h6>
+                <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary rounded-pill">View Course</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

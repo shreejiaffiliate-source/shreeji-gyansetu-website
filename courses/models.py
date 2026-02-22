@@ -190,6 +190,12 @@ class Profile(models.Model):
         ('Student', 'Student'),
     ]
 
+    GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other'),
+    ]
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='Student')
     photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user.png')
@@ -205,6 +211,8 @@ class Profile(models.Model):
     subject_specialization = models.ForeignKey('MasterCategory', on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
     experience_years = models.PositiveIntegerField(default=0)
     bio = models.TextField(blank=True, help_text="Short professional summary")
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
+    is_approved = models.BooleanField(default=False, help_text="Designates whether this teacher can upload courses.")
 
     # Student Specific Information
     enrollment_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
@@ -248,4 +256,5 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
     

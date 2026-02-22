@@ -4,8 +4,11 @@ from django.contrib.auth import login, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
-from django.db.models import Q, Count, Prefetch
-
+from django.db.models import Q, Count, Prefetch, Sum
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth import logout
+from django.views.decorators.cache import never_cache
 # Use get_user_model for compatibility with your custom user setup
 User = get_user_model()
 
@@ -83,13 +86,38 @@ def register(request):
             user.set_password(form.cleaned_data['password'])
             user.save()
             
-            # Explicitly set user_type to override signal defaults
+            # 1. Always associate the profile immediately
             profile = user.profile
-            profile.user_type = form.cleaned_data.get('user_type', 'Student')
-            profile.save()
+            selected_user_type = form.cleaned_data.get('user_type', 'Student')
+            profile.user_type = selected_user_type
 
-            login(request, user)
-            return redirect('login_success')
+            # 2. Flow for TEACHERS
+            if selected_user_type == 'Teacher':
+                profile.is_approved = False
+                profile.save() # Save teacher profile as unapproved
+
+                try:
+                    send_mail(
+                        subject='Registration Submitted - Shreeji GyanSetu',
+                        message=f'Hi {user.first_name}, your registration is submitted to the admin. Let them clarify after that you can add your courses.',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True, 
+                    )
+                    messages.success(request, "Registration submitted. Please wait for admin approval.")
+                except Exception as e:
+                    messages.error(request, f"Email error: {e}")
+
+                # ONLY Teachers go to the waiting page
+                return render(request, 'registration/waiting_approval.html', {'user': user})
+
+            # 3. Flow for STUDENTS
+            else:
+                profile.is_approved = True # Students are usually approved by default
+                profile.save()
+                login(request, user) # Auto-login for students
+                return redirect('login_success')
+                
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -99,17 +127,50 @@ def live_classes(request):
         'live_courses': Course.objects.filter(is_live=True)
     })
 
+def teacher_detail(request, username):
+    # Fetch teacher by username
+
+    teacher = get_object_or_404(User, username=username, profile__user_type='Teacher')
+
+    # Optional: Get courses taught by this teacher
+
+    courses = Course.objects.filter(teacher=teacher, is_active=True)
+
+    context = {
+        'teacher': teacher,
+        'courses': courses,
+    }
+    return render(request, 'courses/teacher_detail.html', context)
+
 
 @login_required
 def login_success(request):
+    # 1. Handle Superusers or users without profiles
     if not hasattr(request.user, 'profile'):
-        return redirect('/admin/' if request.user.is_staff else 'home')
+        if request.user.is_superuser:
+            return redirect('/admin/') # Standard Django Admin
+        return redirect('home')
     
-    u_type = request.user.profile.user_type
+    profile = request.user.profile
+    u_type = profile.user_type
+    
+    # 2. Teacher Logic with Approval Gate
     if u_type == 'Teacher':
+        if not profile.is_approved:
+            # Capture user info before logging out to personalize the waiting page
+            user_info = request.user 
+            logout(request) # Terminate session so they can't access other URLs
+            
+            # Show the dedicated waiting screen instead of redirecting to login
+            return render(request, 'registration/waiting_approval.html', {'user': user_info})
+            
         return redirect('teacher_dashboard')
+    
+    # 3. Admin Dashboard (Custom Management Console)
     elif u_type == 'Admin':
         return redirect('/admin_dashboard/')
+    
+    # 4. Default: Student Dashboard
     return redirect('student_dashboard')
 
 @login_required
@@ -188,25 +249,34 @@ def student_dashboard(request):
 
 @login_required
 def teacher_dashboard(request):
-    if request.user.profile.user_type != 'Teacher':
-        return HttpResponseForbidden("Teachers Only")
+    profile = request.user.profile
+
+    if profile.user_type != 'Teacher':
+        return HttpResponseForbidden("Access Denied: Teachers Only")
+    
+    if not profile.is_approved:
+        messages.warning(request, "Your account is pending admin approval. You cannot access the dashboard yet.")
+        return redirect('home')
     
     my_courses = Course.objects.filter(teacher=request.user).annotate(num_students=Count('students'))
     # Corrected logic for actual student count (Sum of students across all courses)
-    actual_student_count = sum(c.num_students for c in my_courses)
+    total_students = my_courses.aggregate(total=Sum('num_students'))['total'] or 0
+
 
     return render(request, 'courses/teacher_dashboard.html', {
         'my_course': my_courses,
         'total_courses': my_courses.count(),
-        'total_students': actual_student_count,
+        'total_students': total_students,
     })
 
 # --- TEACHER MANAGEMENT VIEWS ---
 
 @login_required
 def upload_course(request):
-    if request.user.profile.user_type != 'Teacher':
-        return HttpResponseForbidden("Access Denied")
+    if request.user.profile.user_type != 'Teacher' or not request.user.profile.is_approved:
+        messages.error(request, "Your account must be approved by an admin to upload courses.")
+        return redirect('home')
+        # return HttpResponseForbidden("Access Denied")
     
     if request.method == 'POST':
         form = CourseUploadForm(request.POST, request.FILES)
@@ -337,17 +407,26 @@ def delete_lesson(request, lesson_id):
     return render(request, 'courses/delete1_lesson_confirm.html', {'lesson': lesson})
 
 @login_required
+@never_cache
 def admin_dashboard(request):
 
-    if not (request.user.profile.user_type == 'Admin' or request.user.is_superuser):
-        return HttpResponseForbidden("Access Denied Administrator Privileges Required")
+    # Check superuser first (doesn't require profile)
+    is_admin_type = False
+    if hasattr(request.user, 'profile'):
+        is_admin_type = (request.user.profile.user_type == 'Admin')
+
+    if not (request.user.is_superuser or is_admin_type):
+        return HttpResponseForbidden("Access Denied: Administrator Privileges Required")
     
     all_courses = Course.objects.all().annotate(num_students=Count('students'))
+    pending_teachers = User.objects.filter(profile__user_type='Teacher', profile__is_approved=False)
     total_courses = all_courses.count()
     all_teachers = User.objects.filter(profile__user_type='Teacher')
 
     context = {
         'all_courses': all_courses,
+        'total_courses': total_courses,
+        'pending_teachers': pending_teachers,
         'all_teachers': all_teachers,
         'platform_students': User.objects.filter(profile__user_type='Student').count(),
     }
@@ -366,3 +445,100 @@ def assign_teacher(request, course_id):
         course.save()
         messages.success(request, f"Course '{course.title}' assigned to {new_teacher.get_full_name()}'")
         return redirect('admin_dashboard')
+    return redirect('admin_dashboard')
+    
+@login_required
+def approve_teacher(request, teacher_id):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden("Unauthorized")
+    
+    teacher_user = get_object_or_404(User, id=teacher_id)
+    profile = teacher_user.profile
+    profile.is_approved = True
+    profile.save()
+
+    # Re-activate their courses automatically
+    Course.objects.filter(teacher=teacher_user).update(is_active=True)
+
+    # Send Approval Email
+    try:
+        send_mail(
+            'Congratulations - Shreeji GyanSetu',
+            f'Congratulations {teacher_user.first_name}, now you can successfully add courses in Shreeji GyanSetu',
+            settings.DEFAULT_FROM_EMAIL,
+            [teacher_user.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+    messages.success(request, f"Email sent! {teacher_user.first_name} is now an authorized instructor.")
+    return redirect('admin_dashboard')
+
+@login_required
+def reject_teacher(request, teacher_id):
+    # Security Check
+    is_admin = False
+    if hasattr(request.user, 'profile'):
+        is_admin = request.user.profile.user_type == 'Admin'
+
+    if not (request.user.is_superuser or is_admin):
+        return HttpResponseForbidden("Access Denied")
+    
+    # Get the teacher user
+    teacher_user = get_object_or_404(User, id=teacher_id)
+    teacher_email = teacher_user.email
+    teacher_name = teacher_user.get_full_name()
+
+    # Send Rejection Email
+
+    try:
+        send_mail(
+            subject="Update regarding your Instructor Application - Shreeji GyanSetu",
+            message=f'Hi {teacher_name},\n\nThank you for your interest in Shreeji GyanSetu. After reviewing your profile, we regret to inform you that we cannot approve your teacher account at this time as it does not meet our current requirements.\n\nBest regards,\nAdmin Team',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[teacher_email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+    # Delete the user (and their profile via cascade)
+    teacher_user.delete()
+
+    messages.warning(request, f"Application for {teacher_name} has been rejected and the account has been removed.")
+    return redirect('admin_dashboard')
+
+@login_required
+def deactivate_teacher(request, teacher_id):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden("Unauthorized")
+    
+    teacher_user = get_object_or_404(User, id=teacher_id)
+    profile = teacher_user.profile
+
+    # 1. Deactivate the teacher
+    profile.is_approved = False
+    profile.save()
+
+    # 2. Hide all their courses
+    Course.objects.filter(teacher=teacher_user).update(is_active=False)
+
+    messages.warning(request, f"Teacher {teacher_user.get_full_name()} has been deactivated. All their courses are now hidden.")
+    return redirect('admin_dashboard')
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
