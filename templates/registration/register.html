@@ -28,8 +28,17 @@
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold" style="color: var(--text-dark);">Register As</label>
-            <div class="adaptive-select">
-            {{ form.user_type }}
+            <div class="adaptive-select">{{ form.user_type }}</div>
+          </div>
+
+          <div id="teacher-fields" style="display: none;" class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Qualification</label>
+              {{ form.qualification }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Experience (Years)</label>
+              {{ form.experience_years }}
             </div>
           </div>
 
@@ -73,5 +82,14 @@
         icon.classList.replace('fa-eye-slash', 'fa-eye')
       }
     }
+    
+    document.querySelector('select[name="user_type"]').addEventListener('change', function () {
+      const teacherFields = document.getElementById('teacher-fields')
+      if (this.value === 'Teacher') {
+        teacherFields.style.display = 'flex'
+      } else {
+        teacherFields.style.display = 'none'
+      }
+    })
   </script>
 {% endblock %}

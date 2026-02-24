@@ -41,12 +41,34 @@ ModuleFormSet = inlineformset_factory(
     extra=1, can_delete=True
 )
 
+from django import forms
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control bg-light border-0'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control bg-light border-0'}))
+    
     user_type = forms.ChoiceField(
         choices=[('Student', 'Student'), ('Teacher', 'Teacher')],
         widget=forms.Select(attrs={'class': 'form-select bg-light border-0'})
+    )
+
+    # --- NEW TEACHER SPECIFIC FIELDS ---
+    qualification = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control bg-light border-0', 
+            'placeholder': 'Highest Qualification (e.g. M.Sc, PhD)'
+        })
+    )
+    experience_years = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control bg-light border-0', 
+            'placeholder': 'Total Experience in Years'
+        })
     )
 
     class Meta:
@@ -61,8 +83,21 @@ class RegistrationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("password") != cleaned_data.get("confirm_password"):
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+        user_type = cleaned_data.get("user_type")
+
+        # Basic Password Validation
+        if password != confirm_password:
             raise forms.ValidationError("Passwords do not match!")
+
+        # Logical Validation: Ensure Teachers provide their background
+        if user_type == 'Teacher':
+            if not cleaned_data.get("qualification"):
+                self.add_error('qualification', "Teachers must provide their qualification.")
+            if cleaned_data.get("experience_years") is None:
+                self.add_error('experience_years', "Teachers must provide years of experience.")
+
         return cleaned_data
     
 class UserUpdateForm(forms.ModelForm):

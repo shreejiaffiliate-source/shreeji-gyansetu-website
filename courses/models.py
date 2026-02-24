@@ -213,6 +213,7 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, help_text="Short professional summary")
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
     is_approved = models.BooleanField(default=False, help_text="Designates whether this teacher can upload courses.")
+    is_rejected = models.BooleanField(default=False)
 
     # Student Specific Information
     enrollment_number = models.CharField(max_length=20, unique=True, blank=True, null=True)

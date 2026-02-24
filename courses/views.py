@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.db.models import Q, Count, Prefetch, Sum
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth import logout
 from django.views.decorators.cache import never_cache
@@ -56,16 +56,42 @@ def about_us(request):
     }
     return render(request, 'courses/about_us.html', context)
 
+from django.core.mail import EmailMessage # Change this import
+
 def contact_us(request):
     if request.method == 'POST':
+        name = request.POST.get('name')
+        user_email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message_content = request.POST.get('message')
+
+        # 1. Save to Database
         ContactMessage.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            subject=request.POST.get('subject'),
-            message=request.POST.get('message')
+            name=name,
+            email=user_email,
+            subject=subject,
+            message=message_content
         )
-        messages.success(request, "Your message has been sent successfully!")
+
+        # 2. Construct the Email using EmailMessage class
+        admin_message = f"You have a new inquiry from {name} ({user_email}):\n\n{message_content}"
+        
+        email = EmailMessage(
+            subject=f"Contact Form: {subject}",
+            body=admin_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.EMAIL_HOST_USER], # Send to your own Gmail
+            reply_to=[user_email],         # Now this will work!
+        )
+
+        try:
+            email.send(fail_silently=False)
+            messages.success(request, "Your message has been sent successfully!")
+        except Exception as e:
+            messages.error(request, f"Message saved, but email notification failed: {e}")
+
         return redirect('contact_us')
+        
     return render(request, 'courses/contact_us.html')
 
 def search(request):
@@ -93,6 +119,8 @@ def register(request):
 
             # 2. Flow for TEACHERS
             if selected_user_type == 'Teacher':
+                profile.qualification = form.cleaned_data.get('qualification')
+                profile.experience_years = form.cleaned_data.get('experience_years')
                 profile.is_approved = False
                 profile.save() # Save teacher profile as unapproved
 
@@ -168,7 +196,7 @@ def login_success(request):
     
     # 3. Admin Dashboard (Custom Management Console)
     elif u_type == 'Admin':
-        return redirect('/admin_dashboard/')
+        return redirect('admin_dashboard')
     
     # 4. Default: Student Dashboard
     return redirect('student_dashboard')
@@ -260,13 +288,15 @@ def teacher_dashboard(request):
     
     my_courses = Course.objects.filter(teacher=request.user).annotate(num_students=Count('students'))
     # Corrected logic for actual student count (Sum of students across all courses)
-    total_students = my_courses.aggregate(total=Sum('num_students'))['total'] or 0
+    unique_students_count = User.objects.filter(enrolled_courses__teacher=request.user).distinct().count()
+    total_enrollments = sum(course.enrollment_count for course in my_courses)
 
 
     return render(request, 'courses/teacher_dashboard.html', {
         'my_course': my_courses,
         'total_courses': my_courses.count(),
-        'total_students': total_students,
+        'unique_students': unique_students_count,
+        'total_enrollments': total_enrollments,
     })
 
 # --- TEACHER MANAGEMENT VIEWS ---
@@ -409,8 +439,7 @@ def delete_lesson(request, lesson_id):
 @login_required
 @never_cache
 def admin_dashboard(request):
-
-    # Check superuser first (doesn't require profile)
+    # 1. Security Check
     is_admin_type = False
     if hasattr(request.user, 'profile'):
         is_admin_type = (request.user.profile.user_type == 'Admin')
@@ -418,17 +447,34 @@ def admin_dashboard(request):
     if not (request.user.is_superuser or is_admin_type):
         return HttpResponseForbidden("Access Denied: Administrator Privileges Required")
     
+    # 2. Fetch Stats
     all_courses = Course.objects.all().annotate(num_students=Count('students'))
-    pending_teachers = User.objects.filter(profile__user_type='Teacher', profile__is_approved=False)
-    total_courses = all_courses.count()
-    all_teachers = User.objects.filter(profile__user_type='Teacher')
+    platform_students_count = User.objects.filter(profile__user_type='Student').count()
+    
+    # 3. Logic for "Action Required" (New Registrations only)
+    # FIX: We only show teachers who are:
+    # - NOT approved
+    # - ARE active (meaning they haven't been manually deactivated/suspended)
+    # - Have 0 courses (indicating they are new)
+    pending_teachers = User.objects.filter(
+        profile__user_type='Teacher', 
+        profile__is_approved=False,
+        is_active=True  # <--- THIS IS THE FIX
+    ).annotate(course_count=Count('taught_courses')).filter(course_count=0)[:5]
+    
+    # 4. Logic for Management Tables
+    # We show the top 5 instructors and top 10 messages
+    all_teachers = User.objects.filter(profile__user_type='Teacher').order_by('-id')[:5]
+    contact_messages = ContactMessage.objects.all().order_by('-id')[:10]
 
     context = {
         'all_courses': all_courses,
-        'total_courses': total_courses,
+        'total_courses': all_courses.count(),
         'pending_teachers': pending_teachers,
         'all_teachers': all_teachers,
-        'platform_students': User.objects.filter(profile__user_type='Student').count(),
+        'platform_students': platform_students_count,
+        'contact_messages': contact_messages,
+        'total_revenue': 0,
     }
     return render(request, 'courses/admin_dashboard.html', context)
 
@@ -455,13 +501,18 @@ def approve_teacher(request, teacher_id):
     
     teacher_user = get_object_or_404(User, id=teacher_id)
     profile = teacher_user.profile
+    
+    # 1. Approve and RE-ACTIVATE account
     profile.is_approved = True
     profile.save()
+    
+    teacher_user.is_active = True # Ensure the account is active
+    teacher_user.save()
 
-    # Re-activate their courses automatically
+    # 2. Re-activate their courses automatically
     Course.objects.filter(teacher=teacher_user).update(is_active=True)
 
-    # Send Approval Email
+    # 3. Send Approval Email
     try:
         send_mail(
             'Congratulations - Shreeji GyanSetu',
@@ -523,11 +574,37 @@ def deactivate_teacher(request, teacher_id):
     profile.is_approved = False
     profile.save()
 
-    # 2. Hide all their courses
+    # 2. MARK USER AS INACTIVE (This hides them from the "New Registration" box)
+    teacher_user.is_active = False
+    teacher_user.save()
+
+    # 3. Hide all their courses
     Course.objects.filter(teacher=teacher_user).update(is_active=False)
 
-    messages.warning(request, f"Teacher {teacher_user.get_full_name()} has been deactivated. All their courses are now hidden.")
+    messages.warning(request, f"Teacher {teacher_user.get_full_name()} has been deactivated and account suspended.")
     return redirect('admin_dashboard')
+
+@login_required
+def all_instructors_view(request):
+    # Security Check
+    if not (request.user.is_superuser or request.user.profile.user_type == 'Admin'):
+        return HttpResponseForbidden("Unauthorized")
+    
+    # Get all teacher, ordered by newest first
+    instructors = User.objects.filter(profile__user_type='Teacher').order_by('-date_joined')
+    return render(request, 'courses/all_instructors.html', {'instructors': instructors})
+
+@login_required
+def all_inquiries_view(request):
+    if not (request.user.is_superuser or request.user.profile.user_type == 'Admin'):
+        return HttpResponseForbidden("Unauthorized")
+    
+    inquiries = ContactMessage.objects.all().order_by('-id')
+    return render(request, 'courses/all_inquiries.html', {'inquiries': inquiries})
+
+    
+
+    
 
 
 

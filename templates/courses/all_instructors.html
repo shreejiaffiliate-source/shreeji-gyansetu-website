@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  All Instructors | Shreeji GyanSetu
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .main-container {
+      padding-top: 100px;
+      background-color: var(--bg-light);
+      min-height: 100vh;
+    }
+    .search-input {
+      max-width: 350px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="main-container px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold mb-0" style="color: var(--text-dark);">Instructor Directory</h3>
+        <p class="text-muted small mb-0">Manage all registered teaching staff members.</p>
+      </div>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+    </div>
+
+    <div id="instructor-mgmt" class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
+      <div class="card-header bg-transparent py-4 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>All Registered Instructors</h5>
+
+        <div class="input-group search-input shadow-sm">
+          <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+          <input type="text" id="instructorSearch" class="form-control border-start-0" placeholder="Search by name or email..." />
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="instructorTable">
+          <thead class="bg-light">
+            <tr class="text-muted small text-uppercase">
+              <th class="ps-4">Instructor</th>
+              <th>Credentials</th>
+              <th>Status</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="instructorBody">
+            {% for teacher in instructors %}
+              <tr class="instructor-row">
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 42px; height: 42px; font-size: 0.9rem; border: 1px solid rgba(var(--primary-rgb), 0.1);">{{ teacher.first_name|slice:':1' }}{{ teacher.last_name|slice:':1' }}</div>
+                    <div>
+                      <div class="fw-bold name-field" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</div>
+                      <div class="small text-muted email-field" style="font-size: 0.75rem;">{{ teacher.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="small fw-semibold text-dark">{{ teacher.profile.qualification|default:'-' }}</div>
+                  <div class="text-muted" style="font-size: 0.7rem;">Exp: {{ teacher.profile.experience_years|default:'0' }} Years</div>
+                </td>
+                <td>
+                  {% if teacher.is_active and teacher.profile.is_approved %}
+                    <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>
+                  {% elif not teacher.is_active %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger px-3">Suspended</span>
+                  {% else %}
+                    <span class="badge bg-warning-subtle text-warning border border-warning px-3">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end pe-4">
+                  {% if teacher.is_active %}
+                    <a href="{% url 'deactivate_teacher' teacher.id %}" class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-sm"><i class="fas fa-user-slash me-1"></i> Deactivate</a>
+                  {% else %}
+                    <a href="{% url 'approve_teacher' teacher.id %}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="fas fa-check me-1"></i> Activate</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-5 text-muted">
+                  <i class="fas fa-user-friends fa-3x mb-3 opacity-25"></i>
+                  <p>No instructors registered yet.</p>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.getElementById('instructorSearch').addEventListener('keyup', function () {
+      let filter = this.value.toLowerCase()
+      let rows = document.querySelectorAll('.instructor-row')
+    
+      rows.forEach((row) => {
+        let name = row.querySelector('.name-field').innerText.toLowerCase()
+        let email = row.querySelector('.email-field').innerText.toLowerCase()
+    
+        if (name.includes(filter) || email.includes(filter)) {
+          row.style.display = ''
+        } else {
+          row.style.display = 'none'
+        }
+      })
+    })
+  </script>
+{% endblock %}

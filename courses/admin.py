@@ -24,7 +24,7 @@ class ModuleInline(admin.StackedInline):
 class CourseAdmin(admin.ModelAdmin):
     # This search_field is what makes 'Course' highlighted in the Lesson Admin
     search_fields = ('title', 'teacher__username') 
-    list_display = ('id', 'title', 'master_category_id', 'price', 'is_active', 'is_live')
+    list_display = ('id', 'title', 'master_category_id', 'teacher_id', 'price', 'is_active', 'is_live')
     list_filter = ('master_category', 'level', 'is_live', 'is_active')
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('students',)
@@ -95,7 +95,7 @@ class ProfileInline(admin.StackedInline):
 
 class UserAdmin(BaseUserAdmin):
     inlines = (ProfileInline,)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_user_type')
+    list_display = ('id','username', 'email', 'first_name', 'last_name', 'get_user_type')
 
     def get_user_type(self, obj):
         return obj.profile.user_type

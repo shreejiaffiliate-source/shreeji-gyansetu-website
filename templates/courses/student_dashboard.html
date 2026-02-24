@@ -10,21 +10,18 @@
       --sidebar-collapsed-width: 80px;
     }
     
-    /* 1. Viewport Control */
     html,
     body {
       height: 100%;
-      overflow: hidden; /* Only the main-content should scroll */
       background-color: var(--bg-light) !important;
     }
     
     .dashboard-wrapper {
       display: flex;
-      height: 100vh;
+      min-height: 100vh;
       width: 100%;
     }
     
-    /* 2. Sidebar - Top Priority */
     .sidebar {
       width: var(--sidebar-width);
       background-color: var(--primary-dblue);
@@ -33,79 +30,112 @@
       left: 0;
       top: 0;
       bottom: 0;
-      z-index: 1100; /* Higher than Navbar and Footer */
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow-y: auto;
-      overflow-x: hidden;
+      z-index: 1200;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
+      overflow-x: hidden; /* Prevent horizontal scrollbars during animation */
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
     }
     
-    .sidebar.collapsed {
-      width: var(--sidebar-collapsed-width);
-    }
-    
+    /* Header styling */
     .sidebar-header {
       height: 70px;
+      min-height: 70px;
       display: flex;
       align-items: center;
-      padding: 0 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      flex-shrink: 0;
+      padding: 0 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
     }
     
     .logo-text {
       font-weight: 800;
-      white-space: nowrap;
+      letter-spacing: 1px;
+      color: #fff;
       transition: opacity 0.2s;
-    }
-    .sidebar.collapsed .logo-text {
-      display: none;
     }
     
-    /* 3. Navigation */
+    /* Menu Item Styling */
     .sidebar-menu {
       list-style: none;
-      padding: 10px 0;
+      padding: 15px 0;
       margin: 0;
       flex-grow: 1;
-      display: flex;
-      flex-direction: column;
     }
+    
     .sidebar-menu li a {
-      padding: 15px 25px;
+      height: 50px;
       display: flex;
       align-items: center;
-      color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
-      transition: 0.2s;
-      white-space: nowrap;
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.2s ease;
+      padding: 0 24px;
       border-left: 4px solid transparent;
+      position: relative;
     }
+    
+    /* Fixed width for icons prevents shifting */
     .sidebar-menu li a i {
-      min-width: 30px;
-      font-size: 1.2rem;
-      margin-right: 15px;
+      min-width: 30px; /* Fixed width prevents shifting */
       text-align: center;
+      font-size: 1.2rem;
+      margin-right: 15px; /* Spacing for expanded state */
+      transition: margin 0.3s;
     }
+    
     .sidebar-menu li.active a,
     .sidebar-menu li a:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
       border-left-color: var(--primary-green);
     }
-    .menu-text {
-      transition: opacity 0.2s;
+    
+    /* COLLAPSED STATE FIXES */
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
     }
+    
+    .sidebar.collapsed .logo-text,
     .sidebar.collapsed .menu-text {
       opacity: 0;
       pointer-events: none;
-    }
-    .mt-auto {
-      margin-top: auto;
+      visibility: hidden;
     }
     
-    /* 4. Layout Shifting (The Magic Part) */
+    /* Keep icons centered when collapsed */
+    .sidebar.collapsed .sidebar-menu li a {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      justify-content: center; /* Center the icon in the flex container */
+    }
+    
+    .sidebar.collapsed .mt-auto a {
+      justify-content: center;
+      padding: 15px 0 !important;
+    }
+    
+    .sidebar.collapsed .sidebar-menu li a i {
+      margin-right: 0 !important; /* Remove margin so it doesn't push the icon left */
+    }
+    
+    .sidebar.collapsed .menu-text {
+      display: none; /* Fully remove from flow so it doesn't take up space */
+    }
+    
+    /* Collapse Button at Bottom */
+    .mt-auto {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .toggle-link {
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* TARGETING THE REAL FOOTER TAG */
     .main-content,
     .navbar,
     footer {
@@ -113,55 +143,41 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
+    /* Combined Shifting logic */
+    .sidebar.collapsed ~ .main-content,
     .main-content.expanded,
     .navbar.expanded,
     footer.expanded {
       margin-left: var(--sidebar-collapsed-width);
     }
     
-    /* 5. Fixed Elements */
     .main-content {
       flex: 1;
       padding: 30px;
-      overflow-y: auto;
-      padding-bottom: 250px; /* Space for the fixed footer */
-    }
-    
-    footer {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      width: 100%;
-      height: auto;
-      background-color: var(--card-bg) !important;
-      z-index: 1040;
-      padding-left: var(--sidebar-width);
-      transition: all 0.3 cubic-bezier(0.4, 0 0.2, 1);
-      border-top: 1px solid var(--border-color);
-    }
-    
-    footer .container {
-      max-width: 100%;
-      padding: 20px;
-    }
-    
-    footer .row {
-      display: flex;
-      flex-wrap: wrap; /* Allows columns to drop to next line if tight */
+      padding-top: 100px;
+      min-height: calc(100vh - 100px);
     }
     
     .navbar {
-      position: sticky;
+      position: fixed;
       top: 0;
+      right: 0;
+      left: 0;
+      width: auto;
       z-index: 1050;
     }
     
-    /* 6. Mobile Logic */
+    /* Ensure the footer behaves correctly */
+    footer {
+      position: relative;
+      background-color: var(--card-bg) !important;
+      border-top: 1px solid var(--border-color);
+      padding: 20px 0;
+      z-index: 1040;
+      display: block; /* Ensure it's not hidden */
+    }
+    
     @media (max-width: 991px) {
-      html,
-      body {
-        overflow: auto;
-      }
       .sidebar {
         left: calc(-1 * var(--sidebar-width));
       }
@@ -169,18 +185,9 @@
         left: 0;
       }
       .main-content,
-      .navbar {
-        margin-left: 0 !important;
-        padding-left: 15px !important;
-      }
+      .navbar,
       footer {
-        position: relative;
-        padding-left: 0 !important;
         margin-left: 0 !important;
-        width: 100% !important;
-      }
-      .main-content {
-        padding-bottom: 30px !important;
       }
     }
   </style>
@@ -190,11 +197,11 @@
   <div class="dashboard-wrapper">
     <nav class="sidebar shadow" id="sidebar">
       <div class="sidebar-header">
-        <span class="logo-text">SHREEJI GYANSETU</span>
+        <span class="logo-text fw-bold">STUDENT PANEL</span>
       </div>
       <ul class="sidebar-menu">
         <li class="active">
-          <a href="#"><i class="fas fa-th-large"></i> <span class="menu-text">Dashboard</span></a>
+          <a href="{% url 'student_dashboard' %}"><i class="fas fa-th-large"></i> <span class="menu-text">Dashboard</span></a>
         </li>
         <li>
           <a href="{% url 'live_classes' %}"><i class="fas fa-video"></i> <span class="menu-text">Live Classes</span></a>
@@ -210,13 +217,13 @@
         </li>
         <hr style="opacity: 0.1; margin: 10px 20px;" />
         <li>
-          <form method="post" action="{% url 'logout' %}" id="logout-form" style="display: none;">
+          <form method="post" action="{% url 'logout' %}" id="logout-form-student" style="display: none;">
             {% csrf_token %}
           </form>
-          <a href="javascript:void(0)" onclick="document.getElementById('logout-form').submit();" class="text-danger"><i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span></a>
+          <a href="javascript:void(0)" onclick="document.getElementById('logout-form-student').submit();" class="text-danger"><i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span></a>
         </li>
         <li class="mt-auto">
-          <a href="javascript:void(0)" id="toggleSidebar" class="toggle-link">
+          <a href="javascript:void(0)" id="toggleSidebar">
             <i class="fas fa-chevron-left" id="toggleIcon"></i>
             <span class="menu-text ms-2">Collapse</span>
           </a>
@@ -227,8 +234,8 @@
     <main class="main-content" id="main-content">
       <div class="row mb-4">
         <div class="col-md-12">
-          <div class="card dashboard-card shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border-color);">
-            <h5 class="fw-bold" style="color: var(--text-dark);">Your Dashboard Today</h5>
+          <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg); border-radius: 15px;">
+            <h5 class="fw-bold mb-1" style="color: var(--text-dark);">Your Dashboard Today</h5>
             <p class="text-muted small mb-0">Hello {{ user.get_full_name|default:user.username }}, Welcome Back!</p>
           </div>
         </div>
@@ -239,12 +246,15 @@
           <h5 class="fw-bold mb-0" style="color: var(--text-dark);">Enrolled Courses</h5>
           <span class="badge bg-primary text-white rounded-pill px-3">{{ enrolled_courses.count }} Courses</span>
         </div>
+
         {% for course in enrolled_courses %}
           <div class="col-lg-6 col-xl-4">
-            <div class="card h-100 border-0 shadow-sm dashboard-card overflow-hidden" style="background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border-color);">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border-color);">
               <div class="row g-0">
                 <div class="col-4">
-                  <img src="{{ course.thumbnail.url }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 120px;" />
+                  {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 120px;" />
+                  {% endif %}
                 </div>
                 <div class="col-8">
                   <div class="card-body p-3">
@@ -274,25 +284,28 @@
       const sidebar = document.getElementById('sidebar')
       const mainContent = document.getElementById('main-content')
       const toggleBtn = document.getElementById('toggleSidebar')
-      const footer = document.querySelector('footer')
       const navbar = document.querySelector('.navbar')
       const toggleIcon = document.getElementById('toggleIcon')
+    
+      // Target the footer tag directly
+      const footer = document.querySelector('footer')
     
       function setSidebarState(isCollapsed) {
         if (isCollapsed) {
           sidebar.classList.add('collapsed')
           mainContent.classList.add('expanded')
-          if (footer) footer.classList.add('expanded')
+          if (footer) footer.classList.add('expanded') // Adds margin-left: 80px
           if (navbar) navbar.classList.add('expanded')
+          toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right')
         } else {
           sidebar.classList.remove('collapsed')
           mainContent.classList.remove('expanded')
-          if (footer) footer.classList.remove('expanded')
+          if (footer) footer.classList.remove('expanded') // Resets to margin-left: 260px
           if (navbar) navbar.classList.remove('expanded')
+          toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left')
         }
       }
     
-      // Initialize state
       const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true'
       setSidebarState(isCollapsed)
     

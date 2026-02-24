@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  All Student Inquiries | Shreeji GyanSetu
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .inquiry-card {
+      transition: transform 0.2s;
+      border: 1px solid var(--border-color);
+    }
+    .inquiry-card:hover {
+      background-color: #f8f9fa;
+    }
+    .search-box {
+      max-width: 400px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid p-4" style="margin-top: 80px;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item">
+              <a href="{% url 'admin_dashboard' %}" class="text-decoration-none">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">Inquiries</li>
+          </ol>
+        </nav>
+        <h3 class="fw-bold mb-0">Student Inquiries</h3>
+        <p class="text-muted small mb-0">Total {{ inquiries.count }} messages received via contact form.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back</a>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+      <div class="card-header bg-white py-3 border-bottom">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="input-group search-box">
+              <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+              <input type="text" id="inquirySearch" class="form-control bg-light border-0" placeholder="Search by name, email or subject..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="inquiryTable">
+          <thead class="bg-light">
+            <tr class="text-muted small text-uppercase">
+              <th class="ps-4">Sender Information</th>
+              <th>Subject</th>
+              <th>Message Content</th>
+              <th>Date Received</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for msg in inquiries %}
+              <tr class="inquiry-row">
+                <td class="ps-4">
+                  <div class="fw-bold text-dark">{{ msg.name }}</div>
+                  <div class="small text-muted">{{ msg.email }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2">{{ msg.subject }}</span>
+                </td>
+                <td>
+                  <div class="text-muted small" style="max-width: 300px; line-height: 1.4;">{{ msg.message }}</div>
+                </td>
+                <td>
+                  <div class="small text-dark">{{ msg.created_at|date:'d M, Y' }}</div>
+                  <div class="text-muted" style="font-size: 0.7rem;">{{ msg.created_at|time:'H:i' }}</div>
+                </td>
+                <td class="text-end pe-4">
+                  <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                  <p>No inquiries found in the database.</p>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    // Simple real-time search filter
+    document.getElementById('inquirySearch').addEventListener('keyup', function () {
+      let value = this.value.toLowerCase()
+      let rows = document.querySelectorAll('.inquiry-row')
+    
+      rows.forEach((row) => {
+        let text = row.innerText.toLowerCase()
+        row.style.display = text.includes(value) ? '' : 'none'
+      })
+    })
+  </script>
+{% endblock %}
