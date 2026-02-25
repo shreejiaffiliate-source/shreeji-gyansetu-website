@@ -17,12 +17,20 @@
             <div class="accordion-item border-0 mb-2" style="background: var(--card-bg);">
               <h2 class="accordion-header d-flex align-items-center"><button class="accordion-button collapsed fw-bold flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" style="background: var(--card-bg); color: var(--text-dark);">{{ module.title }}</button></h2>
               <div id="collapse{{ module.id }}" class="accordion-collapse collapse" data-bs-parent="#curriculumAccordion">
-                <div class="accordion-body" style="background: var(--bg-light);">
+                <div class="accordion-body" style="background: var(--bg-light); color: var(--text-dark);;">
                   <ul class="list-unstyled mb-0">
                     {% for lesson in module.lessons.all %}
                       <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span>
                           <i class="fas {% if lesson.lesson_type == 'Video' %}
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
                               
                               
                               
@@ -52,6 +60,14 @@
 
 
 
+
+
+
+
+
+
+
+
                             {% else %}
                               
                               
@@ -67,7 +83,23 @@
                               
                               
                               
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
                               fa-file-pdf
+
+
+
+
+
+
+
+
 
 
 
@@ -112,7 +144,7 @@
       <div class="col-lg-4">
         <div class="card shadow-sm border-0 sticky-top p-4" style="top: 20px; background: var(--card-bg); z-index: 10;">
           <img src="{{ course.thumbnail.url }}" class="rounded mb-3 w-100 shadow-sm" style="height: auto; max-height: 220px; object-fit: contain; background-color: #f8f9fa;" />
-          <h5 class="fw-bold">Course Status</h5>
+          <h5 class="fw-bold" style="color: var(--text-dark);">Course Status</h5>
           <p>
             {% if course.is_active %}
               <span class="badge bg-success">Visible to Students</span>
@@ -120,12 +152,12 @@
               <span class="badge bg-secondary">Draft Mode</span>
             {% endif %}
           </p>
-          <hr />
-          <div class="d-flex justify-content-between mb-2">
-            <span>Price:</span> <span class="fw-bold">₹{{ course.price }}</span>
+          <hr style="color: var(--text-dark);" />
+          <div class="d-flex justify-content-between mb-2" style="color: var(--text-dark);">
+            <span style="color: var(--text-dark);">Price:</span> <span class="fw-bold" style="color: var(--text-dark);">₹{{ course.price }}</span>
           </div>
           <div class="d-flex justify-content-between mb-3">
-            <span>Enrolled Students:</span> <span class="fw-bold text-primary">{{ course.enrollment_count }}</span>
+            <span style="color: var(--text-dark);">Enrolled Students:</span> <span class="fw-bold text-primary">{{ course.enrollment_count }}</span>
           </div>
           <button class="btn btn-outline-danger w-100 btn-sm"><i class="fas fa-archive"></i> Unpublish Course</button>
         </div>

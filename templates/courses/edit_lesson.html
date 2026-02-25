@@ -3,7 +3,7 @@
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg);">
+            <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg); color: var(--text-dark);">
                 <h3 class="fw-bold mb-4">Edit Lesson: {{ lesson.title }}</h3>
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}

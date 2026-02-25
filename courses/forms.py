@@ -126,3 +126,11 @@ class ProfileUpdateForm(forms.ModelForm):
             'gender': forms.Select(attrs={'class': 'form-select'}),
         
         }
+class ReplyForm(forms.Form):
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 
+            'rows': 5, 
+            'placeholder': 'Write your reply to the student...'
+        })
+    )

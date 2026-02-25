@@ -378,8 +378,11 @@
 
       <div id="inquiry-mgmt" class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
         <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Recent Inquiries</h5>
-          <a href="{% url 'all_inquiries' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All <i class="fas fa-arrow-right ms-1" style="font-size: 0.8rem;"></i></a>
+          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Student Inquiries</h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'resolved_inquiries_list' %}" class="btn btn-sm btn-light rounded-pill px-3 border"><i class="fas fa-archive me-1"></i> View Archive</a>
+            <a href="{% url 'all_inquiries' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -405,7 +408,11 @@
                     <div class="text-truncate text-muted small" style="max-width: 250px;" title="{{ msg.message }}">{{ msg.message }}</div>
                   </td>
                   <td class="text-end pe-4">
-                    <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+                    <div class="d-flex justify-content-end gap-2">
+                      <a href="{% url 'reply_inquiry' msg.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+
+                      <a href="{% url 'resolve_inquiry' msg.id %}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm" title="Mark as Resolved"><i class="fas fa-check"></i></a>
+                    </div>
                   </td>
                 </tr>
               {% empty %}

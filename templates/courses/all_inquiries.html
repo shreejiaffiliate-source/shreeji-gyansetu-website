@@ -16,11 +16,26 @@
     .search-box {
       max-width: 400px;
     }
+    /* Subtle pulsing effect for pending items */
+    .badge-pending {
+      animation: pulse-red 2s infinite;
+    }
+    @keyframes pulse-red {
+      0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.2);
+      }
+      70% {
+        box-shadow: 0 0 0 5px rgba(220, 53, 69, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+      }
+    }
   </style>
 {% endblock %}
 
 {% block content %}
-  <div class="container-fluid p-4" style="margin-top: 80px;">
+  <div class="container-fluid p-4" style="margin-top: 20px;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
         <nav aria-label="breadcrumb">
@@ -28,11 +43,11 @@
             <li class="breadcrumb-item">
               <a href="{% url 'admin_dashboard' %}" class="text-decoration-none">Dashboard</a>
             </li>
-            <li class="breadcrumb-item active">Inquiries</li>
+            <li class="breadcrumb-item active" style="color: var(--text-dark);">Inquiries</li>
           </ol>
         </nav>
         <h3 class="fw-bold mb-0">Student Inquiries</h3>
-        <p class="text-muted small mb-0">Total {{ inquiries.count }} messages received via contact form.</p>
+        <p class="text-muted small mb-0">Total {{ inquiries.count }} messages received.</p>
       </div>
 
       <div class="d-flex gap-2">
@@ -41,12 +56,12 @@
     </div>
 
     <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-      <div class="card-header bg-white py-3 border-bottom">
+      <div class="card-header py-3 border-bottom" style="background-color: var(--card-bg);">
         <div class="row align-items-center">
           <div class="col-md-6">
             <div class="input-group search-box">
               <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
-              <input type="text" id="inquirySearch" class="form-control bg-light border-0" placeholder="Search by name, email or subject..." />
+              <input type="text" id="inquirySearch" class="form-control bg-light border-0" placeholder="Search by name, email or status..." />
             </div>
           </div>
         </div>
@@ -58,8 +73,7 @@
             <tr class="text-muted small text-uppercase">
               <th class="ps-4">Sender Information</th>
               <th>Subject</th>
-              <th>Message Content</th>
-              <th>Date Received</th>
+              <th>Status</th> <th>Date Received</th>
               <th class="text-end pe-4">Actions</th>
             </tr>
           </thead>
@@ -67,28 +81,41 @@
             {% for msg in inquiries %}
               <tr class="inquiry-row">
                 <td class="ps-4">
-                  <div class="fw-bold text-dark">{{ msg.name }}</div>
+                  <div class="fw-bold" style="color: var(--text-dark);">{{ msg.name }}</div>
                   <div class="small text-muted">{{ msg.email }}</div>
                 </td>
                 <td>
-                  <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2">{{ msg.subject }}</span>
+                  <span class="small fw-bold" style="color: var(--text-dark);">{{ msg.subject }}</span>
                 </td>
+
                 <td>
-                  <div class="text-muted small" style="max-width: 300px; line-height: 1.4;">{{ msg.message }}</div>
+                  {% if msg.is_resolved %}
+                    <span class="badge bg-success-subtle text-success border border-success px-3 py-2"><i class="fas fa-check-circle me-1"></i> Replied</span>
+                  {% else %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 badge-pending"><i class="fas fa-clock me-1"></i> Pending</span>
+                  {% endif %}
                 </td>
+
                 <td>
-                  <div class="small text-dark">{{ msg.created_at|date:'d M, Y' }}</div>
+                  <div class="small" style="color: var(--text-dark);">{{ msg.created_at|date:'d M, Y' }}</div>
                   <div class="text-muted" style="font-size: 0.7rem;">{{ msg.created_at|time:'H:i' }}</div>
                 </td>
+
                 <td class="text-end pe-4">
-                  <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+                  <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'reply_inquiry' msg.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+
+                    {% if not msg.is_resolved %}
+                      <a href="{% url 'resolve_inquiry' msg.id %}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm" title="Mark as Replied"><i class="fas fa-check"></i></a>
+                    {% endif %}
+                  </div>
                 </td>
               </tr>
             {% empty %}
               <tr>
                 <td colspan="5" class="text-center py-5 text-muted">
                   <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                  <p>No inquiries found in the database.</p>
+                  <p>No inquiries found.</p>
                 </td>
               </tr>
             {% endfor %}
@@ -97,19 +124,4 @@
       </div>
     </div>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-  <script>
-    // Simple real-time search filter
-    document.getElementById('inquirySearch').addEventListener('keyup', function () {
-      let value = this.value.toLowerCase()
-      let rows = document.querySelectorAll('.inquiry-row')
-    
-      rows.forEach((row) => {
-        let text = row.innerText.toLowerCase()
-        row.style.display = text.includes(value) ? '' : 'none'
-      })
-    })
-  </script>
 {% endblock %}

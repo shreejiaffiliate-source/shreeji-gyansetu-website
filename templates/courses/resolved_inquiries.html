@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container-fluid p-4" style="margin-top: 80px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold mb-0">Resolved Archive</h3>
+        <p class="text-muted small">History of completed student inquiries.</p>
+      </div>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr class="text-muted small text-uppercase">
+              <th class="ps-4">Sender</th>
+              <th>Subject</th>
+              <th>Message</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for msg in resolved_messages %}
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold">{{ msg.name }}</div>
+                  <div class="small text-muted">{{ msg.email }}</div>
+                </td>
+                <td>
+                  <span class="small fw-bold">{{ msg.subject }}</span>
+                </td>
+                <td>
+                  <div class="text-muted small text-truncate" style="max-width: 300px;">{{ msg.message }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-success-subtle text-success border border-success px-3"><i class="fas fa-check-circle me-1"></i> Resolved</span>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-5 text-muted">No resolved inquiries yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -8,6 +8,7 @@ from django.db.models import Q, Count, Prefetch, Sum
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth import logout
+from .forms import ReplyForm
 from django.views.decorators.cache import never_cache
 # Use get_user_model for compatibility with your custom user setup
 User = get_user_model()
@@ -465,7 +466,7 @@ def admin_dashboard(request):
     # 4. Logic for Management Tables
     # We show the top 5 instructors and top 10 messages
     all_teachers = User.objects.filter(profile__user_type='Teacher').order_by('-id')[:5]
-    contact_messages = ContactMessage.objects.all().order_by('-id')[:10]
+    contact_messages = ContactMessage.objects.filter(is_resolved=False).order_by('-id')[:10]
 
     context = {
         'all_courses': all_courses,
@@ -601,6 +602,69 @@ def all_inquiries_view(request):
     
     inquiries = ContactMessage.objects.all().order_by('-id')
     return render(request, 'courses/all_inquiries.html', {'inquiries': inquiries})
+
+@login_required
+def reply_inquiry(request, msg_id):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
+    inquiry = get_object_or_404(ContactMessage, id=msg_id)
+    
+    if request.method == 'POST':
+        form = ReplyForm(request.POST)
+        if form.is_valid():
+            reply_text = form.cleaned_data['message']
+            
+            # Construct the Email
+            email = EmailMessage(
+                subject=f"Re: {inquiry.subject}",
+                body=f"Dear {inquiry.name},\n\n{reply_text}\n\n--\nBest Regards,\nShreeji GyanSetu Support",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[inquiry.email],
+            )
+            
+            try:
+                email.send(fail_silently=False)
+                inquiry.is_resolved = True
+                inquiry.save()
+                messages.success(request, f"Reply sent successfully to {inquiry.name}!")
+                return redirect('all_inquiries')
+            except Exception as e:
+                messages.error(request, f"Email failed to send: {e}")
+    else:
+        form = ReplyForm()
+
+    return render(request, 'courses/reply_inquiry.html', {
+        'form': form,
+        'inquiry': inquiry
+    })
+
+@login_required
+def resolve_inquiry(request, msg_id):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden()
+
+    inquiry = get_object_or_404(ContactMessage, id=msg_id)
+    inquiry.is_resolved = True
+    inquiry.save()
+    
+    messages.success(request, "Inquiry marked as resolved.")
+    return redirect('admin_dashboard')
+
+@login_required
+def resolved_inquiries_list(request):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden()
+
+    # Fetch only resolved messages
+    resolved_messages = ContactMessage.objects.filter(is_resolved=True).order_by('-id')
+
+    return render(request, 'courses/resolved_inquiries.html', {
+        'resolved_messages': resolved_messages
+    })
 
     
 

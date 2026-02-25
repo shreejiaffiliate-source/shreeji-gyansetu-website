@@ -13,37 +13,37 @@
             {% csrf_token %}
             <div class="row g-3">
               <div class="col-12">
-                <label class="fw-bold mb-2">Course Title</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Course Title</label>
                 {{ form.title }}
               </div>
 
               <div class="col-md-6">
-                <label class="fw-bold mb-2">Category</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Category</label>
                 {{ form.master_category }}
               </div>
 
               <div class="col-md-6">
-                <label class="fw-bold mb-2">Difficulty Level</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Difficulty Level</label>
                 {{ form.level }}
               </div>
 
               <div class="col-12">
-                <label class="fw-bold mb-2">Description</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Description</label>
                 {{ form.description }}
               </div>
 
               <div class="col-md-6">
-                <label class="fw-bold mb-2">Regular Price (₹)</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Regular Price (₹)</label>
                 {{ form.price }}
               </div>
 
               <div class="col-md-6">
-                <label class="fw-bold mb-2">Discount Price (₹)</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Discount Price (₹)</label>
                 {{ form.discount_price }}
               </div>
 
               <div class="col-12">
-                <label class="fw-bold mb-2">Current Thumbnail</label>
+                <label class="fw-bold mb-2" style="color: var(--text-dark);">Current Thumbnail</label>
                 <div class="mb-2">
                   <img src="{{ course.thumbnail.url }}" class="rounded shadow-sm" style="height: 100px;" />
                 </div>
@@ -53,11 +53,11 @@
               <div class="col-12 mt-4 d-flex gap-3">
                 <div class="form-check form-switch">
                   {{ form.is_live }}
-                  <label class="form-check-label ms-2">Live Course</label>
+                  <label class="form-check-label ms-2" style="color: var(--text-dark);">Live Course</label>
                 </div>
                 <div class="form-check form-switch">
                   {{ form.is_active }}
-                  <label class="form-check-label ms-2">Active (Visible)</label>
+                  <label class="form-check-label ms-2" style="color: var(--text-dark);">Active (Visible)</label>
                 </div>
               </div>
 
