@@ -2,17 +2,24 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
-from .models import Course, MasterCategory, Profile
-from .serializers import CourseSerializer, CategorySerializer, UserSerializer
+from .models import Course, MasterCategory, Profile, Carousel
+from .serializers import CourseSerializer, CategorySerializer, UserSerializer, SliderSerializer
+from django.db import IntegrityError
+from django.contrib.auth import get_user_model
+from django.contrib.auth import update_session_auth_hash
+
+User = get_user_model()
 
 class ApiRoot(APIView):
     def get(self, request, format=None):
         return Response({
             'login': reverse('api_token_auth', request=request, format=format),
+            'register': reverse('api_register', request=request, format=format),
             'home': reverse('api_home', request=request, format=format),
             'courses': reverse('api_courses', request=request, format=format),
             'my-learning': reverse('api_my_learning', request=request, format=format),
             'profile': reverse('api_profile', request=request, format=format),
+            'enroll': reverse('api_enroll', request=request, format=format),
         })
 
 # 1. Home Screen Data (Categories + Popular Courses)
@@ -20,19 +27,47 @@ class AppHomeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        sliders = Carousel.objects.filter(is_active=True).order_by('order')
         categories = MasterCategory.objects.all().order_by('order')
-        popular_courses = Course.objects.filter(is_active=True).order_by('-students')[:5]
+        popular_courses = Course.objects.filter(is_active=True).order_by('-students', '-id').distinct()[:5]
         
-        return Response({
-            "categories": CategorySerializer(categories, many=True).data,
-            "popular_courses": CourseSerializer(popular_courses, many=True).data
-        })
+        # Create a basic response dictionary
+        data = {
+            "sliders": SliderSerializer(sliders, many=True, context={'request': request}).data,
+            "categories": CategorySerializer(categories, many=True, context={'request': request}).data,
+            "popular_courses": CourseSerializer(popular_courses, many=True, context={'request': request}).data,
+            "user": None # Default for guests
+        }
+
+        # If user is logged in, attach their profile data
+        if request.user.is_authenticated:
+            data["user"] = UserSerializer(request.user, context={'request': request}).data
+            
+        return Response(data)
 
 # 2. List All Courses / Search
 class CourseListView(generics.ListAPIView):
-    queryset = Course.objects.filter(is_active=True)
     serializer_class = CourseSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # Start with all active courses
+        queryset = Course.objects.filter(is_active=True)
+        
+        # Get the category_slug from the URL parameters
+        category_slug = self.request.query_params.get('category_slug')
+        
+        if category_slug:
+            # Filter by the slug of the master category
+            queryset = queryset.filter(master_category__slug=category_slug)
+            
+        return queryset
+
+    # Ensure context is passed for absolute video URLs
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
 
 # 3. Student's Enrolled Courses
 class MyCoursesView(generics.ListAPIView):
@@ -49,3 +84,118 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+    def perform_update(self, serializer):
+        # 1. Save the basic user data (first_name, email, etc.)
+        user = serializer.save()
+        
+        # 2. Extract profile data from the request
+        # In Flutter, we sent these as 'profile.bio', etc.
+        profile_data = self.request.data
+        profile = user.profile
+        
+        # 3. Manually update the Profile fields
+        profile.phone_number = profile_data.get('profile.phone_number', profile.phone_number)
+        profile.branch = profile_data.get('profile.branch', profile.branch)
+        profile.college_name = profile_data.get('profile.college_name', profile.college_name)
+        profile.enrollment_number = profile_data.get('profile.enrollment_number', profile.enrollment_number)
+        profile.qualification = profile_data.get('profile.qualification', profile.qualification)
+        dob = profile_data.get('profile.date_of_birth')
+        if dob and dob.strip(): # If it has a real value, save it
+            profile.date_of_birth = dob
+        elif dob == "": # If it's an empty string from Flutter, set to NULL
+            profile.date_of_birth = None
+        profile.bio = profile_data.get('profile.bio', profile.bio)
+        
+        # 4. Handle the Photo upload if present
+        if 'profile.photo' in self.request.FILES:
+            profile.photo = self.request.FILES['profile.photo']
+            
+        profile.save()
+    
+class UserRegistrationView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        data = request.data  # DRF parses JSON or Form data automatically
+        
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
+        first_name = data.get('first_name', '')
+        last_name = data.get('last_name', '')
+        user_type = data.get('user_type', 'Student')
+
+        # 1. Basic Validation
+        if not username or not password:
+            return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 2. Create User
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            # 3. Update Profile (Django signals usually create the profile automatically)
+            profile = user.profile
+            profile.user_type = user_type
+            
+            if user_type == 'Teacher':
+                profile.qualification = data.get('qualification', '')
+                profile.experience_years = data.get('experience', '')
+                profile.is_approved = False # Teachers need admin approval
+            else:
+                profile.is_approved = True # Students approved by default
+            
+            profile.save()
+
+            return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class EnrollCourseView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        course_id = request.data.get('course_id')
+        try:
+            course = Course.objects.get(id=course_id)
+            if course.students.filter(id=request.user.id).exists():
+                return Response({"message": "Already enrolled"}, status=status.HTTP_200_OK)
+            
+            course.students.add(request.user)
+            return Response({"message": "Enrolled successfully"}, status=status.HTTP_201_CREATED)
+            
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+        user = request.user
+
+        # 1. Check if old password is correct
+        if not user.check_password(old_password):
+            return Response({"error": "Incorrect old password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Set and save new password
+        user.set_password(new_password)
+        user.save()
+
+        # 3. Keep the user logged in after password change
+        update_session_auth_hash(request, user)
+        
+        return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)

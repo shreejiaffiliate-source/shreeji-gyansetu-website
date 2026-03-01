@@ -73,10 +73,13 @@ urlpatterns = [
 
     path('api/', api_views.ApiRoot.as_view(), name='api_root'),
     path('api/login/', obtain_auth_token, name='api_token_auth'), # Returns a Token
+    path('api/register/', api_views.UserRegistrationView.as_view(), name='api_register'),
     path('api/home/', api_views.AppHomeView.as_view(), name='api_home'),
     path('api/courses/', api_views.CourseListView.as_view(), name='api_courses'),
     path('api/my-learning/', api_views.MyCoursesView.as_view(), name='api_my_learning'),
     path('api/profile/', api_views.UserProfileView.as_view(), name='api_profile'),
+    path('api/enroll/', api_views.EnrollCourseView.as_view(), name='api_enroll'),
+    path('api/change-password/', api_views.ChangePasswordView.as_view(), name='api_change_password'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

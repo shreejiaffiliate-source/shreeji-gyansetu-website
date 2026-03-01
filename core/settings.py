@@ -22,6 +22,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -106,3 +107,17 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = ('shreejiaffiliate@gmail.com')
 EMAIL_HOST_PASSWORD = ('cqalsnvodeavhxxa')
 DEFAULT_FROM_EMAIL = ('Shreeji GyanSetu <shreejiaffiliate@gmail.com>')
+
+CORS_ALLOW_ALL_ORIGINS = True # Allow all devices (Flutter app, Emulator, etc.)
+CORS_ALLOW_CREDENTIALS = True
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
