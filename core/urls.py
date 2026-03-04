@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher, live_classes, teacher_detail, reject_teacher, approve_teacher, admin_dashboard, deactivate_teacher, all_inquiries_view, all_instructors_view, reply_inquiry, resolve_inquiry, resolved_inquiries_list
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher, live_classes, teacher_detail, reject_teacher, approve_teacher, admin_dashboard, deactivate_teacher, all_inquiries_view, all_instructors_view, reply_inquiry, resolve_inquiry, resolved_inquiries_list, mark_lesson_complete
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
 from django.conf import settings
@@ -80,6 +80,7 @@ urlpatterns = [
     path('api/profile/', api_views.UserProfileView.as_view(), name='api_profile'),
     path('api/enroll/', api_views.EnrollCourseView.as_view(), name='api_enroll'),
     path('api/change-password/', api_views.ChangePasswordView.as_view(), name='api_change_password'),
+    path('api/lessons/<int:lesson_id>/complete/', mark_lesson_complete, name='mark_lesson_complete'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

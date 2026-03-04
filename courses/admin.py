@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin.exceptions import NotRegistered
 from .models import (
-    MasterCategory, Course, Module, Lesson, 
+    MasterCategory, Course, Module, Lesson, UserLessonProgress,
     Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile, ContactMessage
 )
 from django.contrib.auth import get_user_model
@@ -108,3 +108,11 @@ try:
 except NotRegistered:
     pass
 admin.site.register(User, UserAdmin)
+
+@admin.register(UserLessonProgress)
+class UserLessonProgressAdmin(admin.ModelAdmin):
+    # This allows you to see the user, lesson, and status at a glance
+    list_display = ('user', 'lesson', 'is_completed', 'completed_at')
+    # This adds a filter sidebar for easy tracking
+    list_filter = ('is_completed', 'user', 'lesson__course')
+    search_fields = ('user__username', 'lesson__title')

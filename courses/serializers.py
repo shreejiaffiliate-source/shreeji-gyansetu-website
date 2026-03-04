@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import MasterCategory, Course, Module, Lesson, Profile, Carousel
+from .models import MasterCategory, Course, Module, Lesson, Profile, Carousel, UserLessonProgress
 
 User = get_user_model()
 
@@ -35,13 +35,14 @@ class UserSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     # This is the key Flutter is looking for
     video_url = serializers.SerializerMethodField()
+    notes_file = serializers.SerializerMethodField()
     is_preview = serializers.BooleanField(default=False)
 
 
     class Meta:
         model = Lesson
         # Include content_file if you need it, but video_url is what the player uses
-        fields = ['id', 'title', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order']
+        fields = ['id', 'title', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order', 'notes_file']
 
     def get_video_url(self, obj):
         # 1. Check if an actual file was uploaded to 'content_file'
@@ -56,6 +57,14 @@ class LessonSerializer(serializers.ModelSerializer):
         # Note: Ensure 'video_url' is the name of the field in your actual Model
         return getattr(obj, 'video_url', None)
 
+    def get_notes_file(self, obj):
+        if obj.notes_file: # Matches the field name in your Lesson model
+            request = self.context.get('request')
+            if request is not None:
+                # Returns http://127.0.0.1:8000/media/lesson_notes/file.pdf
+                return request.build_absolute_uri(obj.notes_file.url)
+            return obj.notes_file.url
+        return None
 
 class ModuleSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
@@ -74,6 +83,7 @@ class CourseSerializer(serializers.ModelSerializer):
     master_category = CategorySerializer(read_only=True)
     teacher = UserSerializer(read_only=True)
     modules = ModuleSerializer(many=True, read_only=True)
+    progress = serializers.SerializerMethodField()
     enrollment_count = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -81,7 +91,7 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'thumbnail', 'description', 
             'price', 'discount_price', 'level', 'is_live',
-            'master_category', 'teacher', 'enrollment_count', 'modules', 'is_enrolled'
+            'master_category', 'teacher', 'enrollment_count', 'modules', 'is_enrolled', 'progress',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -97,7 +107,20 @@ class CourseSerializer(serializers.ModelSerializer):
             return obj.students.filter(id=request.user.id).exists()
             
         return False
-
+    
+    def get_progress(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            prog = obj.get_user_progress(request.user)
+            print(f"DEBUG: Serializer calculating progress for {obj.title}: {prog}")
+            return prog
+        return 0.0
+    
+    def get_is_enrolled(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return obj.students.filter(id=user.id).exists()
+        return False
 
 class SliderSerializer(serializers.ModelSerializer):
     class Meta:

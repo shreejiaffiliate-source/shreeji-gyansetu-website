@@ -9,13 +9,16 @@ from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth import logout
 from .forms import ReplyForm
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django.views.decorators.cache import never_cache
 # Use get_user_model for compatibility with your custom user setup
 User = get_user_model()
 
 from .models import (
     MasterCategory, Course, Lesson, Carousel, SuccessStory, 
-    StudyMaterial, YouTubeChannel, Module, Profile, ContactMessage
+    StudyMaterial, YouTubeChannel, Module, Profile, ContactMessage, UserLessonProgress
 )
 from .forms import (
     CourseUploadForm, RegistrationForm, ModuleFormSet, 
@@ -270,7 +273,10 @@ def enroll_course(request, slug):
 
 @login_required
 def student_dashboard(request):
-    enrolled_courses = request.user.enrolled_courses.all()
+    enrolled_courses = Course.objects.filter(
+        students=request.user, 
+        is_active=True
+    ).distinct()
     return render(request, 'courses/student_dashboard.html', {
         'enrolled_courses': enrolled_courses,
         'full_name': request.user.get_full_name() or request.user.username
@@ -665,6 +671,21 @@ def resolved_inquiries_list(request):
     return render(request, 'courses/resolved_inquiries.html', {
         'resolved_messages': resolved_messages
     })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_lesson_complete(request, lesson_id):
+    try:
+        lesson = Lesson.objects.get(id=lesson_id)
+        # update_or_create prevents duplicate entries
+        progress, created = UserLessonProgress.objects.update_or_create(
+            user=request.user,
+            lesson=lesson,
+            defaults={'is_completed': True}
+        )
+        return Response({"status": "success", "message": "Lesson marked as complete"})
+    except Lesson.DoesNotExist:
+        return Response({"status": "error", "message": "Lesson not found"}, status=404)
 
     
 

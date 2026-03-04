@@ -64,6 +64,32 @@ class Course(models.Model):
         if not self.slug: self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
+    def get_user_progress(self, user):
+        """Returns progress as a decimal between 0.0 and 1.0"""
+        if not user.is_authenticated:
+            return 0.0
+    
+        # Use the correct related_name 'course_lessons' defined in Lesson model
+        total_lessons = self.course_lessons.count()
+    
+    # FIX: You previously checked self.total_students == 0, which is wrong here.
+    # We must check if the course actually has lessons.
+        if total_lessons == 0:
+            return 0.0
+    
+        # Count how many lessons of THIS course the user has completed
+        completed_lessons = UserLessonProgress.objects.filter(
+            user=user,
+            lesson__course=self, # Look through the lesson to the course
+            is_completed=True
+        ).count()
+    
+        # Return rounded decimal for Flutter (e.g., 0.5)
+        return round(completed_lessons / total_lessons, 2)
+
+
+
+
     class Meta:
         verbose_name_plural = "2. Courses"
     def __str__(self): return self.title
@@ -139,6 +165,20 @@ class Lesson(models.Model):
 
     def __str__(self): 
         return f"{self.module.title} - {self.title}"
+    
+class UserLessonProgress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lesson_progress')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='user_progress')
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "4.1 Lesson Progress Tracking"
+        # Prevents duplicate progress entries for the same user/lesson
+        unique_together = ('user', 'lesson')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.lesson.title} - Completed: {self.is_completed}"
     
 # class LessonAssignment(models.Model):
 #     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

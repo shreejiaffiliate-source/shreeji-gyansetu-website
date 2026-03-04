@@ -5,8 +5,9 @@ from rest_framework.reverse import reverse
 from .models import Course, MasterCategory, Profile, Carousel
 from .serializers import CourseSerializer, CategorySerializer, UserSerializer, SliderSerializer
 from django.db import IntegrityError
-from django.contrib.auth import get_user_model
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 User = get_user_model()
 
@@ -74,8 +75,21 @@ class MyCoursesView(generics.ListAPIView):
     serializer_class = CourseSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def get_queryset(self):
-        return self.request.user.enrolled_courses.all()
+        # Direct query on Course model is more efficient for progress calculation
+        return Course.objects.filter(
+            students=self.request.user,
+            is_active=True
+        ).distinct()
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
 
 # 4. User Profile Details
 class UserProfileView(generics.RetrieveUpdateAPIView):
