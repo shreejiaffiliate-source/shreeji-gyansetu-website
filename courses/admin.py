@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin.exceptions import NotRegistered
 from .models import (
-    MasterCategory, Course, Module, Lesson, UserLessonProgress,
+    MasterCategory, Course, Module, Lesson, UserLessonProgress, Notification,
     Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile, ContactMessage
 )
 from django.contrib.auth import get_user_model
@@ -116,3 +116,9 @@ class UserLessonProgressAdmin(admin.ModelAdmin):
     # This adds a filter sidebar for easy tracking
     list_filter = ('is_completed', 'user', 'lesson__course')
     search_fields = ('user__username', 'lesson__title')
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'message', 'is_read', 'created_at')
+    list_filter = ('is_read', 'created_at')
+    search_fields = ('user__username', 'message')

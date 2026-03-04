@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}
+  Communication Hub | Admin
+{% endblock %}
+
+{% block content %}
+  <div class="dashboard-wrapper">
+    <main class="main-content">
+      <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 15px;">
+        <h4 class="fw-bold mb-1">Student-Teacher Conversations</h4>
+        <p class="text-muted small mb-0">Monitor all lesson-specific queries and teacher responses.</p>
+      </div>
+
+      <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+              <tr class="text-muted small text-uppercase">
+                <th class="ps-4">Student</th>
+                <th>Teacher / Course</th>
+                <th>Conversation</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for query in all_queries %}
+                <tr>
+                  <td class="ps-4">
+                    <div class="fw-bold">{{ query.student.get_full_name|default:query.student.username }}</div>
+                    <small class="text-muted">{{ query.created_at|date:'d M, Y' }}</small>
+                  </td>
+                  <td>
+                    <div class="badge bg-primary-subtle text-primary mb-1">Teacher: {{ query.lesson.course.teacher.get_full_name }}</div>
+                    <div class="small text-dark">{{ query.lesson.course.title }}</div>
+                    <div class="small text-muted">{{ query.lesson.title }}</div>
+                  </td>
+                  <td>
+                    <div class="mb-2">
+                      <span class="badge bg-light text-dark border">Q:</span>
+                      <small class="text-muted">{{ query.question }}</small>
+                    </div>
+                    {% if query.answer %}
+                      <div>
+                        <span class="badge bg-success-subtle text-success border">A:</span>
+                        <small class="text-muted">{{ query.answer }}</small>
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if query.is_resolved %}
+                      <span class="badge bg-success rounded-pill px-3">Resolved</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark rounded-pill px-3">Waiting</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-5">No communication records found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}

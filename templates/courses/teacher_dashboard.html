@@ -165,7 +165,13 @@
           <a href="{% url 'upload_course' %}"><i class="fas fa-plus-circle"></i> <span class="menu-text">Create Course</span></a>
         </li>
         <li>
-          <a href="#"><i class="fas fa-comments"></i> <span class="menu-text">Student Queries</span></a>
+          <a href="{% url 'teacher_queries' %}">
+            <i class="fas fa-comments"></i>
+            <span class="menu-text">Student Queries</span>
+            {% if unread_count > 0 %}
+              <span class="badge bg-danger rounded-pill ms-2 shadow-sm" style="font-size: 0.75rem; padding: 0.35em 0.65em;">{{ unread_count }}</span>
+            {% endif %}
+          </a>
         </li>
         <li>
           <a href="{% url 'edit_profile' %}"><i class="fas fa-user-edit"></i> <span class="menu-text">Edit Profile</span></a>
@@ -208,7 +214,7 @@
             <div class="col-md-4">
               <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-green) !important;">
                 <i class="fas fa-users fa-2x text-success mb-3"></i>
-                <h6 class="text-muted small fw-bold">Unique Students</h6>
+                <h6 class="text-muted small fw-bold">Enrolled Students</h6>
                 <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ unique_students }}</h3>
               </div>
             </div>

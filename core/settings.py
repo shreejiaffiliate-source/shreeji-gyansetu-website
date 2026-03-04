@@ -45,6 +45,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "courses.context_processors.extras",
+                "courses.context_processors.unread_notifications",
             ],
         },
     },

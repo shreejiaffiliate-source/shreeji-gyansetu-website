@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib import admin
-from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher, live_classes, teacher_detail, reject_teacher, approve_teacher, admin_dashboard, deactivate_teacher, all_inquiries_view, all_instructors_view, reply_inquiry, resolve_inquiry, resolved_inquiries_list, mark_lesson_complete
+from courses.views import home, category_detail, course_detail, lesson_detail, search, teacher_dashboard,upload_course, manage_curriculum, login_required, login_success, add_lesson, register, course_detail_edit, edit_course, edit_lesson, delete_lesson, student_dashboard, enroll_course, all_courses, about_us, contact_us, edit_profile, change_password, admin_dashboard, assign_teacher, live_classes, teacher_detail, reject_teacher, approve_teacher, admin_dashboard, deactivate_teacher, all_inquiries_view, all_instructors_view, reply_inquiry, resolve_inquiry, resolved_inquiries_list, mark_lesson_complete, teacher_queries, reply_query, submit_lesson_query, admin_communication_hub, student_queries
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
 from django.conf import settings
@@ -68,6 +68,12 @@ urlpatterns = [
     path('admin-console/inquiry/reply/<int:msg_id>/', reply_inquiry, name='reply_inquiry'),
     path('resolve-inquiry/<int:msg_id>/', resolve_inquiry, name='resolve_inquiry'),
     path('admin-dashboard/resolved-inquiries/', resolved_inquiries_list, name='resolved_inquiries_list'),
+    path('dashboard/teacher/queries/', teacher_queries, name='teacher_queries'),
+    path('dashboard/teacher/queries/<int:query_id>/reply/', reply_query, name='reply_query'),
+    path('lesson/<int:lesson_id>/query/', submit_lesson_query, name='submit_lesson_query'),
+    # courses/urls.py
+    path('admin-panel/communication/', admin_communication_hub, name='admin_communication'),
+    path('my-queries/', student_queries, name='student_queries'),
 
     # API Endpoints for Mobile App
 
@@ -81,6 +87,10 @@ urlpatterns = [
     path('api/enroll/', api_views.EnrollCourseView.as_view(), name='api_enroll'),
     path('api/change-password/', api_views.ChangePasswordView.as_view(), name='api_change_password'),
     path('api/lessons/<int:lesson_id>/complete/', mark_lesson_complete, name='mark_lesson_complete'),
+    path('api/lessons/<int:lesson_id>/query/', api_views.SubmitLessonQueryView.as_view(), name='api_submit_query'),
+    path('api/lessons/<int:lesson_id>/queries/list/', api_views.LessonQueryListView.as_view(), name='api_query_list'),
+    path('api/notifications/', api_views.NotificationListView.as_view(), name='api_notifications'),
+    path('api/notifications/<int:notification_id>/read/', api_views.mark_notification_read, name='mark_notification_read'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

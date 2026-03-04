@@ -17,7 +17,7 @@ from django.views.decorators.cache import never_cache
 User = get_user_model()
 
 from .models import (
-    MasterCategory, Course, Lesson, Carousel, SuccessStory, 
+    LessonQuery, MasterCategory, Course, Lesson, Carousel, Notification, SuccessStory, 
     StudyMaterial, YouTubeChannel, Module, Profile, ContactMessage, UserLessonProgress
 )
 from .forms import (
@@ -251,6 +251,10 @@ def course_detail(request, slug):
 def lesson_detail(request, course_slug, lesson_id):
     course = get_object_or_404(Course, slug=course_slug)
     lesson = get_object_or_404(Lesson, id=lesson_id, course=course)
+
+    student_queries = []
+    if request.user.is_authenticated:
+        student_queries = LessonQuery.objects.filter(lesson=lesson, student=request.user)
     
     # Check enrollment/preview status
     is_enrolled = request.user.is_authenticated and request.user in course.students.all()
@@ -259,7 +263,7 @@ def lesson_detail(request, course_slug, lesson_id):
 
     modules = course.modules.all().prefetch_related('lessons')
     return render(request, 'courses/lesson_player.html', {
-        'course': course, 'lesson': lesson, 'modules': modules
+        'course': course, 'lesson': lesson, 'modules': modules, 'student_queries': student_queries
     })
 
 @login_required
@@ -672,6 +676,69 @@ def resolved_inquiries_list(request):
         'resolved_messages': resolved_messages
     })
 
+# views.py
+
+@login_required
+def teacher_queries(request):
+    try:
+        if request.user.profile.user_type.lower() != 'teacher':
+            return HttpResponseForbidden("Access Denied: You must be a Teacher.")
+    except AttributeError:
+        return HttpResponseForbidden("Access Denied: Profile not found.")
+    
+    # NEW: Mark all unread notifications for this teacher as read when they open this page
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    
+    # Get queries for all lessons belonging to courses taught by this teacher
+    queries = LessonQuery.objects.filter(
+        lesson__course__teacher=request.user
+    ).select_related('lesson', 'student', 'lesson__course')
+    
+    return render(request, 'courses/teacher_queries.html', {'queries': queries})
+
+@login_required
+def reply_query(request, query_id):
+    query = get_object_or_404(LessonQuery, id=query_id, lesson__course__teacher=request.user)
+    
+    if request.method == 'POST':
+        answer = request.POST.get('answer')
+        query.answer = answer
+        query.is_resolved = True
+        query.save()
+        messages.success(request, "Your reply has been sent to the student!")
+        return redirect('teacher_queries')
+        
+    return render(request, 'courses/reply_query_modal.html', {'query': query})
+
+@login_required
+def submit_lesson_query(request, lesson_id):
+    if request.method == 'POST':
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        question_text = request.POST.get('question')
+        LessonQuery.objects.create(
+            lesson=lesson,
+            student=request.user,
+            question=question_text
+        )
+        messages.success(request, "Your question has been sent to the teacher!")
+        return redirect('lesson_detail', course_slug=lesson.course.slug, lesson_id=lesson.id)
+    
+# courses/views.py
+
+@login_required
+def admin_communication_hub(request):
+    # Security Check
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.user_type == 'Admin')):
+        return HttpResponseForbidden("Access Denied: Admin Privileges Required")
+
+    # Fetch all queries, including their course, teacher, and student info
+    all_queries = LessonQuery.objects.all().select_related(
+        'lesson', 'student', 'lesson__course', 'lesson__course__teacher'
+    ).order_by('-created_at')
+
+    return render(request, 'courses/admin_communication.html', {'all_queries': all_queries})
+
+    
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def mark_lesson_complete(request, lesson_id):
@@ -686,6 +753,27 @@ def mark_lesson_complete(request, lesson_id):
         return Response({"status": "success", "message": "Lesson marked as complete"})
     except Lesson.DoesNotExist:
         return Response({"status": "error", "message": "Lesson not found"}, status=404)
+    
+# views.py
+
+@login_required
+def student_queries(request):
+    # 1. Security check for Students (optional but recommended)
+    if hasattr(request.user, 'profile') and request.user.profile.user_type.lower() != 'student':
+        # If an admin or teacher accidentally clicks this, show their own or redirect
+        pass 
+
+    # 2. Mark student's unread notifications as read upon visiting this page
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    
+    # 3. Fetch all queries asked by this student
+    # We use select_related to get lesson and course info in one database hit
+    queries = LessonQuery.objects.filter(student=request.user).select_related(
+        'lesson', 
+        'lesson__course'
+    ).order_by('-created_at')
+    
+    return render(request, 'courses/student_queries.html', {'queries': queries})
 
     
 

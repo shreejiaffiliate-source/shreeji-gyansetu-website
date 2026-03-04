@@ -213,6 +213,15 @@
           <a href="#"><i class="fas fa-file-alt"></i> <span class="menu-text">Study Material</span></a>
         </li>
         <li>
+          <a href="{% url 'student_queries' %}">
+            <i class="fas fa-question-circle"></i>
+            <span class="menu-text">My Queries</span>
+            {% if unread_count > 0 %}
+              <span class="badge bg-danger rounded-pill ms-2 shadow-sm" style="font-size: 0.75rem; padding: 0.35em 0.65em;">{{ unread_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+        <li>
           <a href="{% url 'edit_profile' %}"><i class="fas fa-user-edit"></i> <span class="menu-text">Edit Profile</span></a>
         </li>
         <hr style="opacity: 0.1; margin: 10px 20px;" />

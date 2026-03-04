@@ -1,13 +1,14 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, decorators
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
-from .models import Course, MasterCategory, Profile, Carousel
+from .models import Course, MasterCategory, Notification, Profile, Carousel, Lesson, LessonQuery
 from .serializers import CourseSerializer, CategorySerializer, UserSerializer, SliderSerializer
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
 
@@ -213,3 +214,71 @@ class ChangePasswordView(APIView):
         update_session_auth_hash(request, user)
         
         return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+    
+class SubmitLessonQueryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, lesson_id):
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            question_text = request.data.get('question')
+            
+            if not question_text:
+                return Response({"error": "Question text is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the query linked to the student and the lesson
+            LessonQuery.objects.create(
+                lesson=lesson,
+                student=request.user,
+                question=question_text
+            )
+            
+            return Response({"message": "Query submitted successfully"}, status=status.HTTP_201_CREATED)
+            
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class LessonQueryListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, lesson_id):
+        # Fetch queries for this specific lesson asked by the current student
+        queries = LessonQuery.objects.filter(
+            lesson_id=lesson_id, 
+            student=request.user
+        ).order_by('-created_at')
+        
+        data = [{
+            "id": q.id,
+            "question": q.question,
+            "answer": q.answer,
+            "is_resolved": q.is_resolved,
+            "created_at": q.created_at.strftime("%d %b, %Y")
+        } for q in queries]
+        
+        return Response(data)
+    
+class NotificationListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        notifications = Notification.objects.filter(user=request.user, is_read=False)
+        data = [{
+            "id": n.id,
+            "message": n.message,
+            "lesson_id": n.query.lesson.id,
+            "course_title": n.query.lesson.course.title
+        } for n in notifications]
+        return Response(data)
+
+@decorators.api_view(['POST']) # Add this decorator
+@decorators.permission_classes([IsAuthenticated]) # Add this decorator    
+def mark_notification_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return Response({"status": "success"})
+    except Notification.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)

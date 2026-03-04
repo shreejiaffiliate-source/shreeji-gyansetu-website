@@ -61,15 +61,18 @@
       <div class="card border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px;">
         <div class="card-header bg-transparent border-0 pt-3 px-4">
             <ul class="nav nav-tabs border-0" id="lessonTab" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active fw-bold" id="desc-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">Description</button>
-                </li>
-                {% if lesson.notes or lesson.notes_file %}
-                <li class="nav-item">
-                    <button class="nav-link fw-bold" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Class Notes</button>
-                </li>
-                {% endif %}
-            </ul>
+    <li class="nav-item">
+        <button class="nav-link active fw-bold" id="desc-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">Description</button>
+    </li>
+    {% if lesson.notes or lesson.notes_file %}
+    <li class="nav-item">
+        <button class="nav-link fw-bold" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Class Notes</button>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <button class="nav-link fw-bold" id="query-tab" data-bs-toggle="tab" data-bs-target="#queries" type="button" role="tab">Ask a Question</button>
+    </li>
+</ul>
         </div>
 
         <div class="card-body p-4">
@@ -119,6 +122,49 @@
                 </div>
             </div>
             {% endif %}
+
+            <div class="tab-pane fade" id="queries" role="tabpanel">
+    <div class="row">
+        <div class="col-md-5 border-end">
+            <h5 class="fw-bold mb-3" style="color: var(--text-dark);">New Question</h5>
+            <form action="{% url 'submit_lesson_query' lesson.id %}" method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea name="question" class="form-control" rows="4" placeholder="Type your doubt here..." required style="border-radius: 10px; background: var(--bg-light);"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-paper-plane me-2"></i>Send to Teacher
+                </button>
+            </form>
+        </div>
+        
+        <div class="col-md-7 ps-md-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-dark);">Your Previous Questions</h5>
+            <div class="overflow-auto" style="max-height: 300px;">
+                {% for query in student_queries %}
+                    <div class="card mb-3 border-0 shadow-sm" style="background: var(--bg-light); border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <p class="small mb-1 text-muted">Question:</p>
+                            <p class="fw-semibold mb-2" style="color: var(--text-dark);">{{ query.question }}</p>
+                            
+                            {% if query.answer %}
+                                <div class="p-2 rounded" style="background: #e7f3ff; border-left: 4px solid var(--primary-cyan);">
+                                    <p class="small mb-1 fw-bold text-primary">Teacher's Response:</p>
+                                    <p class="small mb-0 text-dark">{{ query.answer }}</p>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning px-3">Pending Response</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted small">No questions asked for this lesson yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+            
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ from smart_selects.db_fields import ChainedForeignKey
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
+from django.conf import settings
 
 class MasterCategory(models.Model):
     title = models.CharField(max_length=100)
@@ -282,6 +283,66 @@ class ContactMessage(models.Model):
 
     class Meta:
         verbose_name_plural = "8. Contact Messages"
+
+class LessonQuery(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='queries')
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='student_queries'
+    )    
+    question = models.TextField()
+    answer = models.TextField(blank=True, null=True)
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "9. Lesson Queries"
+        ordering = ['-created_at']
+
+    def __str__(self): 
+        return f"Query by {self.student.username} on {self.lesson.title}"
+    
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_answer = None
+        
+        # If updating, grab the old answer to check for changes
+        if not is_new:
+            old_answer = LessonQuery.objects.get(pk=self.pk).answer
+
+        super().save(*args, **kwargs)
+
+        # 1. NOTIFY TEACHER: When a student creates a new query
+        if is_new:
+            teacher = self.lesson.course.teacher
+            if teacher:
+                from .models import Notification
+                Notification.objects.create(
+                    user=teacher,
+                    query=self,
+                    message=f"New query from {self.student.username} in {self.lesson.title}"
+                )
+
+        # 2. NOTIFY STUDENT: When teacher adds a reply
+        elif not old_answer and self.answer:
+            from .models import Notification
+            Notification.objects.create(
+                user=self.student,
+                query=self,
+                message=f"Your teacher replied to your query in {self.lesson.title}"
+            )
+    
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    query = models.ForeignKey(LessonQuery, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     
 # Signals to automatically create a profile when a User is created
 
