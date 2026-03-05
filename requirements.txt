@@ -1,0 +1,21 @@
+# Web Framework
+Django>=5.0
+
+# Database & Selects
+django-smart-selects
+
+# API & Mobile Integration
+djangorestframework
+django-cors-headers
+
+# Authentication
+django-rest-auth
+
+# Database (SQLite is built-in, but good to have these for production)
+dj-database-url
+
+# Environment Variables (Highly recommended for SECRET_KEY)
+python-decouple
+
+# Media Handling (For profile photos and course thumbnails)
+Pillow
