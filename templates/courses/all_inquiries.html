@@ -1,41 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'base_sidebar.html' %}
 
-{% block title %}
-  All Student Inquiries | Shreeji GyanSetu
+{% block dash_title %}
+  User Inquiries
 {% endblock %}
 
-{% block extra_css %}
-  <style>
-    .inquiry-card {
-      transition: transform 0.2s;
-      border: 1px solid var(--border-color);
-    }
-    .inquiry-card:hover {
-      background-color: #f8f9fa;
-    }
-    .search-box {
-      max-width: 400px;
-    }
-    /* Subtle pulsing effect for pending items */
-    .badge-pending {
-      animation: pulse-red 2s infinite;
-    }
-    @keyframes pulse-red {
-      0% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.2);
-      }
-      70% {
-        box-shadow: 0 0 0 5px rgba(220, 53, 69, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-      }
-    }
-  </style>
-{% endblock %}
-
-{% block content %}
-  <div class="container-fluid p-4" style="margin-top: 20px;">
+{% block dashboard_content %}
+  <div class="container-fluid">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
         <nav aria-label="breadcrumb">
@@ -46,20 +16,20 @@
             <li class="breadcrumb-item active" style="color: var(--text-dark);">Inquiries</li>
           </ol>
         </nav>
-        <h3 class="fw-bold mb-0">Student Inquiries</h3>
-        <p class="text-muted small mb-0">Total {{ inquiries.count }} messages received.</p>
+        <h3 class="fw-bold mb-0" style="color: var(--text-dark);">User Inquiries</h3>
+        <p class="text-muted small mb-0">Total {{ inquiries.count }} messages received from the platform.</p>
       </div>
 
       <div class="d-flex gap-2">
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back</a>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-4 shadow-sm bg-white btn-dash-nav"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-      <div class="card-header py-3 border-bottom" style="background-color: var(--card-bg);">
+    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden; background: var(--card-bg);">
+      <div class="card-header py-4 border-bottom bg-transparent">
         <div class="row align-items-center">
           <div class="col-md-6">
-            <div class="input-group search-box">
+            <div class="input-group search-box shadow-sm">
               <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
               <input type="text" id="inquirySearch" class="form-control bg-light border-0" placeholder="Search by name, email or status..." />
             </div>
@@ -73,7 +43,8 @@
             <tr class="text-muted small text-uppercase">
               <th class="ps-4">Sender Information</th>
               <th>Subject</th>
-              <th>Status</th> <th>Date Received</th>
+              <th>Status</th>
+              <th>Date Received</th>
               <th class="text-end pe-4">Actions</th>
             </tr>
           </thead>
@@ -97,7 +68,7 @@
                 </td>
 
                 <td>
-                  <div class="small" style="color: var(--text-dark);">{{ msg.created_at|date:'d M, Y' }}</div>
+                  <div class="small fw-bold" style="color: var(--text-dark);">{{ msg.created_at|date:'d M, Y' }}</div>
                   <div class="text-muted" style="font-size: 0.7rem;">{{ msg.created_at|time:'H:i' }}</div>
                 </td>
 
@@ -114,8 +85,8 @@
             {% empty %}
               <tr>
                 <td colspan="5" class="text-center py-5 text-muted">
-                  <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                  <p>No inquiries found.</p>
+                  <i class="fas fa-inbox fa-4x mb-3 opacity-25"></i>
+                  <p class="fw-bold">No inquiries found in the system.</p>
                 </td>
               </tr>
             {% endfor %}

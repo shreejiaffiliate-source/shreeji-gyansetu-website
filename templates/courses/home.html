@@ -29,51 +29,68 @@
   </div>
 
   <section class="container mt-5">
-    <h4 class="fw-bold mb-4">Popular Courses</h4>
+    <h4 class="fw-bold mb-4">
+      {% if user.is_authenticated and user.profile.user_type == 'Teacher' %}
+        Your Published Courses
+      {% else %}
+        Popular Courses
+      {% endif %}
+    </h4>
+
     <div class="row g-4">
-      {% for course in popular_courses %}
-        <div class="col-md-3">
-          <a href="{% url 'course_detail' course.slug %}" class="text-decoration-none text-dark">
-            <div class="card course-card h-100 shadow-sm">
-              <div class="position-relative">
-                <img src="{{ course.thumbnail.url }}" class="card-img-top" />
-              </div>
-
-              <div class="card-body p-3">
-                <h6 class="fw-bold mb-2" style="color: var(--text-dark);">{{ course.title }}</h6>
-
-                <div class="d-flex justify-content-between align-items-center mb-3" style="min-height: 30px;">
-                  <p class="fw-bold mb-0" style="color: var(--primary-green); font-size: 1.1rem;">₹{{ course.price }}</p>
-
-                  {% if course.is_live %}
-                    <div class="live-wrapper">
-                      <span class="live-badge"><span class="live-dot"></span>LIVE</span>
-                    </div>
-                  {% endif %}
-                </div>
-
-                <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary btn-sm w-100 rounded-pill">View Course</a>
-              </div>
-            </div>
-          </a>
-        </div>
-      {% endfor %}
+      {% if user.is_authenticated and user.profile.user_type == 'Teacher' %}
+        {% for course in user.taught_courses.all %}
+          <div class="col-md-3">
+            {% include 'includes/course_card.html' with course=course %}
+          </div>
+        {% empty %}
+          <div class="col-12 text-center py-4">
+            <p class="text-muted">
+              You haven't published any courses yet. <a href="{% url 'upload_course' %}">Create one now!</a>
+            </p>
+          </div>
+        {% endfor %}
+      {% else %}
+        {% for course in popular_courses %}
+          <div class="col-md-3">
+            {% include 'includes/course_card.html' with course=course %}
+          </div>
+        {% endfor %}
+      {% endif %}
     </div>
   </section>
 
-  <section class="container mt-5">
-    <h4 class="fw-bold mb-4">Popular Category</h4>
+  <section class="container mt-5 mb-5">
+    <h4 class="fw-bold mb-4">
+      {% if user.is_authenticated and user.profile.user_type == 'Teacher' %}
+        My Course Categories
+      {% else %}
+        Popular Categories
+      {% endif %}
+    </h4>
+
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
       {% for cat in categories %}
         <div class="col">
-          <a a href="{% url 'category_detail' cat.slug %}" class="text-decoration-none">
-            <div class="card h-100 border-0 shadow-sm text-center py-5 category-tile">
+          <a href="{% url 'category_detail' cat.slug %}" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm text-center py-5 category-tile" style="background: var(--card-bg); border-radius: 15px;">
               <div class="mb-2">
                 <i class="fas {{ cat.icon_class }} fa-2x text-primary"></i>
               </div>
-              <span class="small fw-bold text-dark">{{ cat.title }}</span>
+              <span class="small fw-bold" style="color: var(--text-dark);">{{ cat.title }}</span>
             </div>
           </a>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center py-4">
+          <i class="fas fa-tags fa-3x text-muted opacity-25 mb-3"></i>
+          <p class="text-muted">
+            {% if user.profile.user_type == 'Teacher' %}
+              No categories found. Assign a category to your courses to see them here.
+            {% else %}
+              No categories available yet.
+            {% endif %}
+          </p>
         </div>
       {% endfor %}
     </div>

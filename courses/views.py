@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseForbidden
 from django.contrib.auth import login, update_session_auth_hash, get_user_model
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.db.models import Q, Count, Prefetch, Sum
@@ -28,8 +28,18 @@ from .forms import (
 # --- PUBLIC VIEWS ---
 
 def home(request):
+    # 1. Default: Show all categories
+    categories = MasterCategory.objects.all().order_by('order')
+
+    # 2. If Teacher: Filter only to categories where they have courses
+    if request.user.is_authenticated and request.user.profile.user_type == 'Teacher':
+        categories = MasterCategory.objects.filter(
+            courses__teacher=request.user
+        ).distinct().order_by('order')
+
+    # 3. Build the context using the 'categories' variable defined above
     context = {
-        'categories': MasterCategory.objects.all().order_by('order'),
+        'categories': categories,  # This now uses the filtered version for Teachers
         'slides': Carousel.objects.filter(is_active=True),
         'popular_courses': Course.objects.filter(is_active=True)
                             .annotate(num_students=Count('students'))
@@ -42,9 +52,22 @@ def home(request):
     return render(request, 'courses/home.html', context)
 
 def all_courses(request):
-    categories = MasterCategory.objects.prefetch_related(
-        Prefetch('courses', queryset=Course.objects.filter(is_active=True))
+    # 1. Define the Course QuerySet based on user type
+    if request.user.is_authenticated and request.user.profile.user_type == 'Teacher':
+        # Teachers only see their own courses
+        course_queryset = Course.objects.filter(teacher=request.user)
+        # Filter categories to only those that contain this teacher's courses
+        categories_queryset = MasterCategory.objects.filter(courses__teacher=request.user).distinct()
+    else:
+        # Students and Guests see all active courses
+        course_queryset = Course.objects.filter(is_active=True)
+        categories_queryset = MasterCategory.objects.all()
+
+    # 2. Apply Prefetch to optimize database hits
+    categories = categories_queryset.prefetch_related(
+        Prefetch('courses', queryset=course_queryset)
     ).order_by('order')
+
     return render(request, 'courses/all_courses.html', {'categories': categories})
 
 def category_detail(request, slug):
@@ -775,20 +798,88 @@ def student_queries(request):
     
     return render(request, 'courses/student_queries.html', {'queries': queries})
 
+def is_admin(user):
+    return user.is_authenticated and user.is_superuser
+
+@user_passes_test(is_admin)
+def all_platform_courses(request):
+    # Annotate ensures 'num_students' is available for each course
+    courses = Course.objects.all().annotate(
+        num_students=Count('students')
+    ).select_related('teacher', 'master_category')
     
+    return render(request, 'courses/all_platform_courses.html', {
+        'all_courses': courses
+    })
 
-    
+@login_required
+def teacher_my_courses_view(request):
+    if request.user.profile.user_type != 'Teacher':
+        return HttpResponseForbidden("Access Denied")
 
+    # Fetch categories that have courses belonging to this teacher
+    categories = MasterCategory.objects.filter(
+        courses__teacher=request.user
+    ).prefetch_related(
+        Prefetch(
+            'courses',
+            queryset=Course.objects.filter(teacher=request.user)
+        )
+    ).distinct().order_by('order')
 
+    return render(request, 'courses/teacher_course_detail_sb.html', {
+        'categories': categories
+    })
 
+@login_required
+def teacher_upload_course_sb(request):
+    # 1. Security check: Only approved teachers
+    if request.user.profile.user_type != 'Teacher' or not request.user.profile.is_approved:
+        messages.error(request, "Access denied. Only approved instructors can create courses.")
+        return redirect('home')
 
+    if request.method == 'POST':
+        form = CourseUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            # 2. Save course but don't commit yet to attach teacher
+            course = form.save(commit=False)
+            course.teacher = request.user
+            course.save()
+            
+            messages.success(request, f"Course '{course.title}' created! Now add your lessons.")
+            # Redirect to manage curriculum to start adding modules
+            return redirect('manage_curriculum', course_slug=course.slug)
+    else:
+        form = CourseUploadForm()
 
-    
+    return render(request, 'courses/teacher_upload_course_sb.html', {
+        'form': form
+    })
 
+@login_required
+def edit_profile_sb(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        
+        # Capture the 'next' URL to redirect back to the correct dashboard
+        next_url = request.POST.get('next')
 
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            
+            # Redirect logic: back to 'next' or default to login_success (dashboard router)
+            if next_url and 'edit' not in next_url:
+                return redirect(next_url)
+            return redirect('login_success')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
 
-
-
-
-
-
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
+    return render(request, 'courses/edit_profile_sb.html', context)

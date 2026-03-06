@@ -1,32 +1,36 @@
-{% extends 'base.html' %}
-{% block title %}
-  My Queries | Shreeji GyanSetu
+{% extends 'base_sidebar.html' %}
+
+{% block dash_title %}
+  My Queries
 {% endblock %}
 
-{% block content %}
-  <div class="container py-5" style="margin-top: 80px;">
+{% block dashboard_content %}
+  <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h3 class="fw-bold">My Lesson Doubts</h3>
-      <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+      <div>
+        <h3 class="fw-bold mb-1" style="color: var(--text-dark);">My Lesson Doubts</h3>
+        <p class="text-muted small mb-0">Track all your questions and teacher responses here.</p>
+      </div>
+      <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
     </div>
 
     {% for query in queries %}
       <div class="card mb-4 border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
         <div class="card-header bg-transparent border-bottom py-3">
           <div class="d-flex justify-content-between align-items-center">
-            <span class="badge bg-primary-subtle text-primary px-3">{{ query.lesson.course.title }}</span>
+            <span class="badge bg-primary-subtle text-primary px-3 rounded-pill">{{ query.lesson.course.title }}</span>
             <small class="text-muted"><i class="far fa-clock me-1"></i>{{ query.created_at|date:'d M, Y' }}</small>
           </div>
-          <h6 class="mt-2 mb-0 fw-bold" style="color: var(--text-dark);">Lesson: {{ query.lesson.title }}</h6>
+          <h6 class="mt-2 mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-book-reader me-2 text-primary"></i>Lesson: {{ query.lesson.title }}</h6>
         </div>
 
         <div class="card-body p-4">
           <div class="mb-3">
             <p class="text-muted small mb-1 text-uppercase fw-bold">My Question:</p>
-            <p class="fs-6" style="color: var(--text-dark);">{{ query.question }}</p>
+            <p class="fs-6 mb-0" style="color: var(--text-dark);">{{ query.question }}</p>
           </div>
 
-          <hr class="opacity-10" style="background-color: var(--text-muted);" />
+          <hr class="opacity-10" />
 
           <div>
             <p class="text-muted small mb-1 text-uppercase fw-bold">Teacher's Response:</p>
@@ -35,7 +39,7 @@
                 <p class="mb-0 fst-italic" style="color: var(--text-dark);">{{ query.answer }}</p>
               </div>
             {% else %}
-              <div class="d-flex align-items-center text-warning">
+              <div class="d-flex align-items-center text-warning p-2 rounded-3" style="background: rgba(255, 193, 7, 0.05);">
                 <i class="fas fa-hourglass-half me-2"></i>
                 <span class="small fst-italic">Waiting for the teacher to reply...</span>
               </div>
@@ -44,11 +48,15 @@
         </div>
       </div>
     {% empty %}
-      <div class="text-center py-5">
-        <i class="fas fa-comment-slash fa-3x text-muted opacity-25 mb-3"></i>
-        <h5 class="text-muted">You haven't asked any questions yet.</h5>
-        <p class="small text-muted">Ask doubts directly from the video player in the app or website!</p>
+      <div class="card border-0 shadow-sm text-center py-5" style="background: var(--card-bg); border-radius: 15px;">
+        <div class="card-body">
+          <i class="fas fa-comment-slash fa-4x text-muted opacity-25 mb-3"></i>
+          <h5 class="text-muted fw-bold">You haven't asked any questions yet.</h5>
+          <p class="text-muted small">Need help with a lesson? Ask your doubts directly from the video player!</p>
+          <a href="{% url 'all_courses' %}" class="btn btn-primary rounded-pill px-4 mt-2">Browse Courses</a>
+        </div>
       </div>
     {% endfor %}
   </div>
+
 {% endblock %}

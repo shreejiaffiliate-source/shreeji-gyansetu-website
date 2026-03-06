@@ -1,30 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'base_sidebar.html' %}
 
-{% block title %}
-  All Instructors | Shreeji GyanSetu
+{% block dash_title %}
+  Instructor Directory
 {% endblock %}
 
-{% block extra_css %}
-  <style>
-    .main-container {
-      padding-top: 100px;
-      background-color: var(--bg-light);
-      min-height: 100vh;
-    }
-    .search-input {
-      max-width: 350px;
-    }
-  </style>
-{% endblock %}
-
-{% block content %}
-  <div class="main-container px-4">
+{% block dashboard_content %}
+  <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h3 class="fw-bold mb-0" style="color: var(--text-dark);">Instructor Directory</h3>
-        <p class="text-muted small mb-0">Manage all registered teaching staff members.</p>
+        <p class="text-muted small mb-0">Manage all registered teaching staff members and their platform access.</p>
       </div>
-      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-4 shadow-sm bg-white btn-dash-nav"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
     </div>
 
     <div id="instructor-mgmt" class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
@@ -83,8 +70,8 @@
             {% empty %}
               <tr>
                 <td colspan="4" class="text-center py-5 text-muted">
-                  <i class="fas fa-user-friends fa-3x mb-3 opacity-25"></i>
-                  <p>No instructors registered yet.</p>
+                  <i class="fas fa-user-friends fa-4x mb-3 opacity-25"></i>
+                  <p class="fw-bold">No instructors registered yet.</p>
                 </td>
               </tr>
             {% endfor %}
@@ -93,24 +80,4 @@
       </div>
     </div>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-  <script>
-    document.getElementById('instructorSearch').addEventListener('keyup', function () {
-      let filter = this.value.toLowerCase()
-      let rows = document.querySelectorAll('.instructor-row')
-    
-      rows.forEach((row) => {
-        let name = row.querySelector('.name-field').innerText.toLowerCase()
-        let email = row.querySelector('.email-field').innerText.toLowerCase()
-    
-        if (name.includes(filter) || email.includes(filter)) {
-          row.style.display = ''
-        } else {
-          row.style.display = 'none'
-        }
-      })
-    })
-  </script>
 {% endblock %}

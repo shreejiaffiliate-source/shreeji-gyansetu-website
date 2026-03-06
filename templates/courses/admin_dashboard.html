@@ -1,521 +1,235 @@
-{% extends 'base.html' %}
+{% extends 'base_sidebar.html' %}
 
-{% block title %}
-  Admin Console | Shreeji GyanSetu
+{% block dash_title %}
+  Admin Console
 {% endblock %}
 
-{% block extra_css %}
-  <style>
-    :root {
-      --sidebar-width: 260px;
-      --sidebar-collapsed-width: 80px;
-    }
-    
-    /* 1. Global Layout Fixes */
-    html,
-    body {
-      height: 100%;
-      background-color: var(--bg-light) !important;
-    }
-    
-    .dashboard-wrapper {
-      display: flex;
-      min-height: 100vh;
-      width: 100%;
-    }
-    
-    /* 2. Sidebar - Higher Z-index than Footer/Nav */
-    .sidebar {
-      width: var(--sidebar-width);
-      background-color: var(--primary-dblue);
-      color: white;
-      position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      z-index: 1200;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden; /* Prevent horizontal scrollbars during animation */
-      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Header styling */
-    .sidebar-header {
-      height: 70px;
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      white-space: nowrap;
-    }
-    
-    .logo-text {
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #fff;
-      transition: opacity 0.2s;
-    }
-    
-    /* Menu Item Styling */
-    .sidebar-menu {
-      list-style: none;
-      padding: 15px 0;
-      margin: 0;
-      flex-grow: 1;
-    }
-    
-    .sidebar-menu li a {
-      height: 50px;
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.2s ease;
-      padding: 0 24px;
-      border-left: 4px solid transparent;
-      position: relative;
-    }
-    
-    /* Fixed width for icons prevents shifting */
-    .sidebar-menu li a i {
-      min-width: 30px; /* Fixed width prevents shifting */
-      text-align: center;
-      font-size: 1.2rem;
-      margin-right: 15px; /* Spacing for expanded state */
-      transition: margin 0.3s;
-    }
-    
-    .sidebar-menu li.active a,
-    .sidebar-menu li a:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      border-left-color: var(--primary-green);
-    }
-    
-    /* COLLAPSED STATE FIXES */
-    .sidebar.collapsed {
-      width: var(--sidebar-collapsed-width);
-    }
-    
-    .sidebar.collapsed .logo-text,
-    .sidebar.collapsed .menu-text {
-      opacity: 0;
-      pointer-events: none;
-      visibility: hidden;
-    }
-    
-    /* Keep icons centered when collapsed */
-    .sidebar.collapsed .sidebar-menu li a {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-      justify-content: center; /* Center the icon in the flex container */
-    }
-    
-    .sidebar.collapsed .mt-auto a {
-      justify-content: center;
-      padding: 15px 0 !important;
-    }
-    
-    .sidebar.collapsed .sidebar-menu li a i {
-      margin-right: 0 !important; /* Remove margin so it doesn't push the icon left */
-    }
-    
-    .sidebar.collapsed .menu-text {
-      display: none; /* Fully remove from flow so it doesn't take up space */
-    }
-    
-    /* Collapse Button at Bottom */
-    .mt-auto {
-      margin-top: auto;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    .toggle-link {
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    /* 3. Main Content & Component Alignment */
-    .main-content,
-    .navbar,
-    footer {
-      margin-left: var(--sidebar-width);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* Shifting logic for collapsed state */
-    .sidebar.collapsed ~ .main-content,
-    .main-content.expanded,
-    .navbar.expanded,
-    footer.expanded {
-      margin-left: var(--sidebar-collapsed-width);
-    }
-    
-    .main-content {
-      flex: 1;
-      padding: 30px;
-      padding-top: 100px; /* Space for Sticky Navbar */
-      padding-bottom: 100px; /* Space for Fixed Footer */
-      min-height: 100vh;
-    }
-    
-    /* Fixed Component Overrides */
-    .navbar {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: auto;
-      left: 0;
-      z-index: 1050;
-    }
-    
-    footer {
-      position: relative;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      z-index: 1040;
-      background-color: var(--card-bg) !important;
-      border-top: 1px solid var(--border-color);
-    }
-    
-    /* Mobile Logic */
-    @media (max-width: 991px) {
-      .sidebar {
-        left: calc(-1 * var(--sidebar-width));
-      }
-      .sidebar.active {
-        left: 0;
-      }
-      .main-content,
-      .navbar,
-      footer {
-        margin-left: 0 !important;
-      }
-      .main-content {
-        padding-top: 80px;
-        padding-bottom: 20px;
-      }
-      footer {
-        position: relative;
-      }
-    }
-  </style>
-{% endblock %}
-
-{% block content %}
-  <div class="dashboard-wrapper">
-    <nav class="sidebar shadow" id="sidebar">
-      <div class="sidebar-header">
-        <span class="logo-text fw-bold">ADMIN PANEL</span>
+{% block dashboard_content %}
+  <div class="card border-0 shadow-sm p-4 mb-4" style="background: var(--card-bg); border-radius: 15px;">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="fw-bold mb-1" style="color: var(--text-dark);">Admin Control Center</h4>
+        <p class="text-muted small mb-0">Manage instructors, courses, and platform health.</p>
       </div>
-      <ul class="sidebar-menu">
-        <li class="active">
-          <a href="{% url 'admin_dashboard' %}"><i class="fas fa-chart-line"></i> <span class="menu-text">Overview</span></a>
-        </li>
-        <li>
-          <a href="{% url 'all_instructors' %}"><i class="fas fa-users-cog"></i> <span class="menu-text">Instructors</span></a>
-        </li>
-        <li>
-          <a href="{% url 'all_courses' %}"><i class="fas fa-layer-group"></i> <span class="menu-text">Courses</span></a>
-        </li>
-        <li>
-          <a href="{% url 'admin_communication' %}">
-            <i class="fas fa-comments"></i>
-            <span class="menu-text">Communication Hub</span>
-            {% if unread_count > 0 %}
-              <span class="badge bg-danger rounded-pill ms-2 shadow-sm" style="font-size: 0.75rem; padding: 0.35em 0.65em;">{{ unread_count }}</span>
-            {% endif %}
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'edit_profile' %}"><i class="fas fa-cog"></i> <span class="menu-text">Settings</span></a>
-        </li>
-        <hr style="opacity: 0.1; margin: 10px 20px;" />
-        <li>
-          <form method="post" action="{% url 'logout' %}" id="logout-form-admin" style="display: none;">
-            {% csrf_token %}
-          </form>
-          <a href="javascript:void(0)" onclick="document.getElementById('logout-form-admin').submit();" class="text-danger"><i class="fas fa-power-off"></i> <span class="menu-text">Logout</span></a>
-        </li>
-        <li class="mt-auto">
-          <a href="javascript:void(0)" id="toggleSidebar">
-            <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            <span class="menu-text ms-2">Collapse</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-
-    <main class="main-content" id="main-content">
-      <div class="card border-0 shadow-sm p-4 mb-4" style="background: var(--card-bg); border-radius: 15px;">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h4 class="fw-bold mb-1" style="color: var(--text-dark);">Admin Control Center</h4>
-            <p class="text-muted small mb-0">Manage instructors, courses, and platform health.</p>
-          </div>
-          <div class="badge bg-danger p-2 px-3 shadow-sm">Master Access</div>
-        </div>
-      </div>
-
-      {% if pending_teachers %}
-        <div class="card border-0 shadow-sm mb-4" style="background: rgba(255, 193, 7, 0.05); border-left: 5px solid #ffc107; border-radius: 15px;">
-          <div class="card-body p-4">
-            <h6 class="fw-bold text-warning mb-3 uppercase small"><i class="fas fa-clock me-2"></i>Action Required: New Registrations</h6>
-            <div class="table-responsive">
-              <table class="table table-borderless align-middle mb-0">
-                <thead class="text-muted small text-uppercase">
-                  <tr>
-                    <th>Instructor</th>
-                    <th>Qualification</th>
-                    <th>Experience</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for teacher in pending_teachers %}
-                    <tr style="border-top: 1px solid rgba(0,0,0,0.05);">
-                      <td>
-                        <div class="fw-bold" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</div>
-                        <div class="small text-muted">{{ teacher.email }}</div>
-                      </td>
-
-                      <td>
-                        <span class="badge bg-white text-dark border px-3 py-2">{{ teacher.profile.qualification|default:'Not Provided' }}</span>
-                      </td>
-
-                      <td style="color: var(--text-dark);">{{ teacher.profile.experience_years|default:'0' }} Years</td>
-
-                      <td class="text-end">
-                        <a href="{% url 'approve_teacher' teacher.id %}" class="btn btn-success btn-sm rounded-pill px-4 shadow-sm"><i class="fas fa-check me-1"></i> Approve</a>
-
-                        <a href="{% url 'reject_teacher' teacher.id %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 ms-2" onclick="return confirm('Reject this application?');"><i class="fas fa-times me-1"></i> Reject</a>
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      {% endif %}
-
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
-            <i class="fas fa-user-graduate fa-2x text-primary mb-3"></i>
-            <h6 class="text-muted small fw-bold">Total Students</h6>
-            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ platform_students }}</h3>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
-            <i class="fas fa-book-open fa-2x text-success mb-3"></i>
-            <h6 class="text-muted small fw-bold">Active Courses</h6>
-            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ all_courses.count }}</h3>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
-            <i class="fas fa-chalkboard-teacher fa-2x text-warning mb-3"></i>
-            <h6 class="text-muted small fw-bold">Total Instructors</h6>
-            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ all_teachers.count }}</h3>
-          </div>
-        </div>
-      </div>
-
-      <div id="instructor-mgmt" class="card border-0 shadow-sm mb-4" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
-        <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>Recent Instructors</h5>
-          <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-light text-dark border d-none d-md-inline-block">{{ all_teachers.count }} Total</span>
-            <a href="{% url 'all_instructors' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All <i class="fas fa-arrow-right ms-1" style="font-size: 0.8rem;"></i></a>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-              <tr class="text-muted small text-uppercase">
-                <th class="ps-4">Instructor</th>
-                <th>Credentials</th>
-                <th>Status</th>
-                <th class="text-end pe-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for teacher in all_teachers|slice:':5' %}
-                <tr>
-                  <td class="ps-4">
-                    <div class="d-flex align-items-center">
-                      <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 38px; height: 38px; font-size: 0.85rem;">{{ teacher.first_name|slice:':1' }}{{ teacher.last_name|slice:':1' }}</div>
-                      <div>
-                        <div class="fw-bold" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</div>
-                        <div class="small text-muted" style="font-size: 0.75rem;">{{ teacher.email }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="small fw-semibold text-dark">{{ teacher.profile.qualification|default:'-' }}</div>
-                  </td>
-                  <td>
-                    {% if teacher.profile.is_approved %}
-                      <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>
-                    {% else %}
-                      <span class="badge bg-danger-subtle text-danger border border-danger px-3">Deactivated</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-end pe-4">
-                    {% if teacher.profile.is_approved %}
-                      <a href="{% url 'deactivate_teacher' teacher.id %}" class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-sm"><i class="fas fa-user-slash me-1"></i> Deactivate</a>
-                    {% else %}
-                      <a href="{% url 'approve_teacher' teacher.id %}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="fas fa-check me-1"></i> Activate</a>
-                    {% endif %}
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center py-4 text-muted">No instructors registered yet.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="inquiry-mgmt" class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
-        <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Student Inquiries</h5>
-          <div class="d-flex gap-2">
-            <a href="{% url 'resolved_inquiries_list' %}" class="btn btn-sm btn-light rounded-pill px-3 border"><i class="fas fa-archive me-1"></i> View Archive</a>
-            <a href="{% url 'all_inquiries' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light small text-uppercase">
-              <tr>
-                <th class="ps-4">Sender</th>
-                <th>Subject</th>
-                <th>Message</th>
-                <th class="text-end pe-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for msg in contact_messages|slice:':5' %}
-                <tr>
-                  <td class="ps-4">
-                    <div class="fw-bold" style="color: var(--text-dark);">{{ msg.name }}</div>
-                    <div class="small text-muted" style="font-size: 0.75rem;">{{ msg.email }}</div>
-                  </td>
-                  <td>
-                    <span class="small fw-bold" style="color: var(--text-dark);">{{ msg.subject }}</span>
-                  </td>
-                  <td>
-                    <div class="text-truncate text-muted small" style="max-width: 250px;" title="{{ msg.message }}">{{ msg.message }}</div>
-                  </td>
-                  <td class="text-end pe-4">
-                    <div class="d-flex justify-content-end gap-2">
-                      <a href="{% url 'reply_inquiry' msg.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
-
-                      <a href="{% url 'resolve_inquiry' msg.id %}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm" title="Mark as Resolved"><i class="fas fa-check"></i></a>
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center py-5 text-muted">No inquiries yet.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card border-0 shadow-sm" style="background: var(--card-bg);">
-        <div class="card-header bg-transparent py-3">
-          <h5 class="mb-0 fw-bold" style="color: var(--text-dark);">All Platform Courses</h5>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Course</th>
-                <th>Current Teacher</th>
-                <th>Students</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for course in all_courses %}
-                <tr>
-                  <td>
-                    <div class="fw-bold" style="color: var(--text-dark);">{{ course.title }}</div>
-                    <small class="text-muted">{{ course.master_category }}</small>
-                  </td>
-                  <td>
-                    <span class="badge bg-info text-dark">{{ course.teacher.get_full_name|default:course.teacher.username }}</span>
-                  </td>
-                  <td>{{ course.num_students }}</td>
-                  <td>
-                    <div class="dropdown">
-                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Manage</button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <a class="dropdown-item" href="{% url 'course_detail_edit' course.slug %}">Edit Content</a>
-                        </li>
-                        <li>
-                          <a class="dropdown-item text-danger" href="#">Delete Course</a>
-                        </li>
-                      </ul>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
+      <div class="badge bg-danger p-2 px-3 shadow-sm">Master Access</div>
+    </div>
   </div>
-{% endblock %}
 
-{% block extra_js %}
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const sidebar = document.getElementById('sidebar')
-      const mainContent = document.getElementById('main-content')
-      const toggleBtn = document.getElementById('toggleSidebar')
-      const footer = document.querySelector('footer')
-      const navbar = document.querySelector('.navbar')
-      const toggleIcon = document.getElementById('toggleIcon')
-    
-      function setSidebarState(isCollapsed) {
-        if (isCollapsed) {
-          sidebar.classList.add('collapsed')
-          mainContent.classList.add('expanded')
-          if (footer) footer.classList.add('expanded')
-          if (navbar) navbar.classList.add('expanded')
-          toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right')
-        } else {
-          sidebar.classList.remove('collapsed')
-          mainContent.classList.remove('expanded')
-          if (footer) footer.classList.remove('expanded')
-          if (navbar) navbar.classList.remove('expanded')
-          toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left')
-        }
-      }
-    
-      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true'
-      setSidebarState(isCollapsed)
-    
-      toggleBtn.addEventListener('click', () => {
-        const newState = !sidebar.classList.contains('collapsed')
-        setSidebarState(newState)
-        localStorage.setItem('sidebar-collapsed', newState)
-      })
-    })
-  </script>
+  {% if pending_teachers %}
+    <div class="card border-0 shadow-sm mb-4" style="background: rgba(255, 193, 7, 0.05); border-left: 5px solid #ffc107; border-radius: 15px;">
+      <div class="card-body p-4">
+        <h6 class="fw-bold text-warning mb-3 uppercase small"><i class="fas fa-clock me-2"></i>Action Required: New Registrations</h6>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0">
+            <thead class="text-muted small text-uppercase">
+              <tr>
+                <th>Instructor</th>
+                <th>Qualification</th>
+                <th>Experience</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for teacher in pending_teachers %}
+                <tr style="border-top: 1px solid rgba(0,0,0,0.05);">
+                  <td>
+                    <div class="fw-bold" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</div>
+                    <div class="small text-muted">{{ teacher.email }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-white text-dark border px-3 py-2">{{ teacher.profile.qualification|default:'Not Provided' }}</span>
+                  </td>
+                  <td style="color: var(--text-dark);">{{ teacher.profile.experience_years|default:'0' }} Years</td>
+                  <td class="text-end">
+                    <a href="{% url 'approve_teacher' teacher.id %}" class="btn btn-success btn-sm rounded-pill px-4 shadow-sm"><i class="fas fa-check me-1"></i> Approve</a>
+                    <a href="{% url 'reject_teacher' teacher.id %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 ms-2" onclick="return confirm('Reject this application?');"><i class="fas fa-times me-1"></i> Reject</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
+        <i class="fas fa-user-graduate fa-2x text-primary mb-3"></i>
+        <h6 class="text-muted small fw-bold">Total Students</h6>
+        <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ platform_students }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
+        <i class="fas fa-book-open fa-2x text-success mb-3"></i>
+        <h6 class="text-muted small fw-bold">Active Courses</h6>
+        <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ all_courses.count }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px;">
+        <i class="fas fa-chalkboard-teacher fa-2x text-warning mb-3"></i>
+        <h6 class="text-muted small fw-bold">Total Instructors</h6>
+        <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ all_teachers.count }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div id="instructor-mgmt" class="card border-0 shadow-sm mb-4" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
+    <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>Recent Instructors</h5>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-light text-dark border d-none d-md-inline-block">{{ all_teachers.count }} Total</span>
+        <a href="{% url 'all_instructors' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All <i class="fas fa-arrow-right ms-1" style="font-size: 0.8rem;"></i></a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr class="text-muted small text-uppercase">
+            <th class="ps-4">Instructor</th>
+            <th>Credentials</th>
+            <th>Status</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for teacher in all_teachers|slice:':5' %}
+            <tr>
+              <td class="ps-4">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 38px; height: 38px; font-size: 0.85rem;">{{ teacher.first_name|slice:':1' }}{{ teacher.last_name|slice:':1' }}</div>
+                  <div>
+                    <div class="fw-bold" style="color: var(--text-dark);">{{ teacher.get_full_name|default:teacher.username }}</div>
+                    <div class="small text-muted" style="font-size: 0.75rem;">{{ teacher.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="small fw-semibold text-dark">{{ teacher.profile.qualification|default:'-' }}</div>
+              </td>
+              <td>
+                {% if teacher.profile.is_approved %}
+                  <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>
+                {% else %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger px-3">Deactivated</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                {% if teacher.profile.is_approved %}
+                  <a href="{% url 'deactivate_teacher' teacher.id %}" class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-sm"><i class="fas fa-user-slash me-1"></i> Deactivate</a>
+                {% else %}
+                  <a href="{% url 'approve_teacher' teacher.id %}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="fas fa-check me-1"></i> Activate</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-4 text-muted">No instructors registered yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="inquiry-mgmt" class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
+    <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-envelope-open-text me-2 text-primary"></i>User Inquiries</h5>
+      <div class="d-flex gap-2">
+        <span class="badge bg-light text-dark border d-none d-md-inline-block">{{ contact_messages.count }} Total</span>
+        <a href="{% url 'resolved_inquiries_list' %}" class="btn btn-sm btn-light rounded-pill px-3 border"><i class="fas fa-archive me-1"></i> View Archive</a>
+        <a href="{% url 'all_inquiries' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light small text-uppercase">
+          <tr>
+            <th class="ps-4">Sender</th>
+            <th>Subject</th>
+            <th>Message</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for msg in contact_messages|slice:':5' %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold" style="color: var(--text-dark);">{{ msg.name }}</div>
+                <div class="small text-muted" style="font-size: 0.75rem;">{{ msg.email }}</div>
+              </td>
+              <td>
+                <span class="small fw-bold" style="color: var(--text-dark);">{{ msg.subject }}</span>
+              </td>
+              <td>
+                <div class="text-truncate text-muted small" style="max-width: 250px;" title="{{ msg.message }}">{{ msg.message }}</div>
+              </td>
+              <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-2">
+                  <a href="{% url 'reply_inquiry' msg.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-reply me-1"></i> Reply</a>
+                  <a href="{% url 'resolve_inquiry' msg.id %}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm" title="Mark as Resolved"><i class="fas fa-check"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-5 text-muted">No inquiries yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-5" style="background: var(--card-bg); border-radius: 15px;">
+    <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold" style="color: var(--text-dark);"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>All Platform Courses</h5>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-light text-dark border d-none d-md-inline-block">{{ all_courses.count }} Total</span>
+        <a href="{% url 'all_platform_courses' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All <i class="fas fa-arrow-right ms-1" style="font-size: 0.8rem;"></i></a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr class="text-muted small text-uppercase">
+            <th class="ps-4">Course</th>
+            <th>Teacher</th>
+            <th>Students</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in all_courses|slice:':5' %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold" style="color: var(--text-dark);">{{ course.title }}</div>
+                <small class="text-muted">{{ course.master_category }}</small>
+              </td>
+              <td>
+                <span class="badge bg-info text-dark">{{ course.teacher.get_full_name|default:course.teacher.username }}</span>
+              </td>
+              <td>{{ course.num_students }}</td>
+              <td class="text-end pe-4">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill" data-bs-toggle="dropdown">Manage</button>
+                  <ul class="dropdown-menu shadow border-0">
+                    <li>
+                      <a class="dropdown-item" href="{% url 'course_detail_edit' course.slug %}">Edit Content</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item text-danger" href="#">Delete Course</a>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 {% endblock %}

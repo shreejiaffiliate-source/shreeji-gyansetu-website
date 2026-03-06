@@ -1,0 +1,25 @@
+<a href="{% url 'course_detail' course.slug %}" class="text-decoration-none text-dark">
+  <div class="card course-card h-100 shadow-sm" style="background: var(--card-bg); border-radius: 15px;">
+    <div class="position-relative">
+      {% if course.thumbnail %}
+        <img src="{{ course.thumbnail.url }}" class="card-img-top" style="border-top-left-radius: 15px; border-top-right-radius: 15px; height: 160px; object-fit: cover;" />
+      {% endif %}
+    </div>
+
+    <div class="card-body p-3">
+      <h6 class="fw-bold mb-2" style="color: var(--text-dark);">{{ course.title }}</h6>
+
+      <div class="d-flex justify-content-between align-items-center mb-3" style="min-height: 30px;">
+        <p class="fw-bold mb-0" style="color: var(--primary-green); font-size: 1.1rem;">₹{{ course.price }}</p>
+
+        {% if course.is_live %}
+          <div class="live-wrapper">
+            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <button class="btn btn-primary btn-sm w-100 rounded-pill">View Course</button>
+    </div>
+  </div>
+</a>

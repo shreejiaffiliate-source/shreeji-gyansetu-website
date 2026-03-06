@@ -1,336 +1,108 @@
-{% extends 'base.html' %}
+{% extends 'base_sidebar.html' %}
 
-{% block title %}
-  Teacher Dashboard | Shreeji GyanSetu
+{% block dash_title %}
+  Teacher Dashboard
 {% endblock %}
 
-{% block extra_css %}
-  <style>
-    :root {
-      --sidebar-width: 260px;
-      --sidebar-collapsed-width: 80px;
-    }
-    
-    html,
-    body {
-      height: 100%;
-      background-color: var(--bg-light) !important;
-    }
-    
-    .dashboard-wrapper {
-      display: flex;
-      min-height: 100vh;
-      width: 100%;
-    }
-    
-    /* Sidebar Styling */
-    .sidebar {
-      width: var(--sidebar-width);
-      background-color: var(--primary-dblue);
-      color: white;
-      position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      z-index: 1200;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sidebar-header {
-      height: 70px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      white-space: nowrap;
-    }
-    
-    .logo-text {
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #fff;
-    }
-    
-    .sidebar-menu {
-      list-style: none;
-      padding: 15px 0;
-      margin: 0;
-      flex-grow: 1;
-    }
-    
-    .sidebar-menu li a {
-      height: 50px;
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.2s ease;
-      padding: 0 24px;
-      border-left: 4px solid transparent;
-    }
-    
-    .sidebar-menu li a i {
-      min-width: 30px;
-      text-align: center;
-      font-size: 1.2rem;
-      margin-right: 15px;
-    }
-    
-    .sidebar-menu li.active a,
-    .sidebar-menu li a:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      border-left-color: var(--primary-green);
-    }
-    
-    /* Collapsed State */
-    .sidebar.collapsed {
-      width: var(--sidebar-collapsed-width);
-    }
-    .sidebar.collapsed .logo-text,
-    .sidebar.collapsed .menu-text {
-      opacity: 0;
-      visibility: hidden;
-      display: none;
-    }
-    .sidebar.collapsed .sidebar-menu li a {
-      justify-content: center;
-      padding: 0;
-    }
-    .sidebar.collapsed .sidebar-menu li a i {
-      margin-right: 0;
-    }
-    
-    /* Main Content Shifting */
-    .main-content,
-    .navbar,
-    footer {
-      margin-left: var(--sidebar-width);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .sidebar.collapsed ~ .main-content,
-    .main-content.expanded,
-    .navbar.expanded,
-    footer.expanded {
-      margin-left: var(--sidebar-collapsed-width);
-    }
-    
-    .main-content {
-      flex: 1;
-      padding: 30px;
-      padding-top: 100px;
-      min-height: 100vh;
-    }
-    
-    .mt-auto {
-      margin-top: auto;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    @media (max-width: 991px) {
-      .sidebar {
-        left: calc(-1 * var(--sidebar-width));
-      }
-      .sidebar.active {
-        left: 0;
-      }
-      .main-content,
-      .navbar,
-      footer {
-        margin-left: 0 !important;
-      }
-    }
-  </style>
-{% endblock %}
-
-{% block content %}
-  <div class="dashboard-wrapper">
-    <nav class="sidebar shadow" id="sidebar">
-      <div class="sidebar-header">
-        <span class="logo-text fw-bold">TEACHER PANEL</span>
+{% block dashboard_content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 mb-4 d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold" style="color: var(--text-dark);">Teacher Dashboard</h2>
+          <p class="text-muted">Welcome back, {{ request.user.first_name }}! Here are your current stats.</p>
+        </div>
+        <a href="{% url 'upload_course' %}" class="btn btn-primary btn-lg shadow-sm fw-bold rounded-pill px-4"><i class="fas fa-plus-circle me-2"></i> Create New Course</a>
       </div>
-      <ul class="sidebar-menu">
-        <li class="active">
-          <a href="{% url 'teacher_dashboard' %}"><i class="fas fa-chart-line"></i> <span class="menu-text">Overview</span></a>
-        </li>
-        <li>
-          <a href="#my-courses-section"><i class="fas fa-book"></i> <span class="menu-text">My Courses</span></a>
-        </li>
-        <li>
-          <a href="{% url 'upload_course' %}"><i class="fas fa-plus-circle"></i> <span class="menu-text">Create Course</span></a>
-        </li>
-        <li>
-          <a href="{% url 'teacher_queries' %}">
-            <i class="fas fa-comments"></i>
-            <span class="menu-text">Student Queries</span>
-            {% if unread_count > 0 %}
-              <span class="badge bg-danger rounded-pill ms-2 shadow-sm" style="font-size: 0.75rem; padding: 0.35em 0.65em;">{{ unread_count }}</span>
-            {% endif %}
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'edit_profile' %}"><i class="fas fa-user-edit"></i> <span class="menu-text">Edit Profile</span></a>
-        </li>
-        <hr style="opacity: 0.1; margin: 10px 20px;" />
-        <li>
-          <form method="post" action="{% url 'logout' %}" id="logout-form-teacher" style="display: none;">
-            {% csrf_token %}
-          </form>
-          <a href="javascript:void(0)" onclick="document.getElementById('logout-form-teacher').submit();" class="text-danger"><i class="fas fa-power-off"></i> <span class="menu-text">Logout</span></a>
-        </li>
-        <li class="mt-auto">
-          <a href="javascript:void(0)" id="toggleSidebar">
-            <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            <span class="menu-text ms-2">Collapse</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
 
-    <main class="main-content" id="main-content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12 mb-4 d-flex justify-content-between align-items-center">
-            <div>
-              <h2 class="fw-bold" style="color: var(--text-dark);">Teacher Dashboard</h2>
-              <p class="text-muted">Welcome back, {{ request.user.first_name }}! Here is your current stats.</p>
-            </div>
-            <a href="{% url 'upload_course' %}" class="btn btn-primary btn-lg shadow-sm fw-bold rounded-pill px-4"><i class="fas fa-plus-circle me-2"></i> Create New Course</a>
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-blue) !important;">
+            <i class="fas fa-layer-group fa-2x text-primary mb-3"></i>
+            <h6 class="text-muted small fw-bold">Total Courses</h6>
+            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ total_courses }}</h3>
           </div>
-
-          <div class="row g-4 mb-4">
-            <div class="col-md-4">
-              <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-blue) !important;">
-                <i class="fas fa-layer-group fa-2x text-primary mb-3"></i>
-                <h6 class="text-muted small fw-bold">Total Courses</h6>
-                <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ total_courses }}</h3>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-green) !important;">
-                <i class="fas fa-users fa-2x text-success mb-3"></i>
-                <h6 class="text-muted small fw-bold">Enrolled Students</h6>
-                <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ unique_students }}</h3>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-cyan) !important;">
-                <i class="fas fa-user-check fa-2x text-info mb-3"></i>
-                <h6 class="text-muted small fw-bold">Total Enrollments</h6>
-                <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ total_enrollments }}</h3>
-              </div>
-            </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-green) !important;">
+            <i class="fas fa-users fa-2x text-success mb-3"></i>
+            <h6 class="text-muted small fw-bold">Enrolled Students</h6>
+            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ unique_students }}</h3>
           </div>
-
-          <div class="col-12" id="my-courses-section">
-            <div class="card border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
-              <div class="card-header bg-transparent border-bottom py-3">
-                <h5 class="fw-bold mb-0" style="color: var(--text-dark);"><i class="fas fa-list me-2 text-primary"></i>My Published Courses</h5>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="bg-light">
-                    <tr class="text-muted small text-uppercase">
-                      <th class="ps-4">Course Info</th>
-                      <th>Category</th>
-                      <th>Students</th>
-                      <th>Status</th>
-                      <th class="text-end pe-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for course in my_course %}
-                      <tr>
-                        <td class="ps-4">
-                          <div class="d-flex align-items-center">
-                            <img src="{{ course.thumbnail.url }}" width="50" height="50" class="rounded me-3 shadow-sm" style="object-fit: cover;" />
-                            <div>
-                              <span class="fw-bold d-block" style="color: var(--text-dark);">{{ course.title }}</span>
-                              <small class="text-muted">ID: #{{ course.id }}</small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span class="badge bg-light text-dark border">{{ course.master_category.title }}</span>
-                        </td>
-                        <td>
-                          <div class="d-flex align-items-center">
-                            <i class="fas fa-users me-2 text-muted"></i>
-                            <span class="fw-semibold">{{ course.enrollment_count }}</span>
-                          </div>
-                        </td>
-                        <td>
-                          {% if course.is_active %}
-                            <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>
-                          {% else %}
-                            <span class="badge bg-warning-subtle text-warning border border-warning px-3">Draft</span>
-                          {% endif %}
-                        </td>
-                        <td class="text-end pe-4">
-                          <div class="btn-group">
-                            <a href="{% url 'manage_curriculum' course.slug %}" class="btn btn-sm btn-outline-primary rounded-start-pill px-3"><i class="fas fa-edit me-1"></i> Lessons</a>
-                            <a href="{% url 'course_detail_edit' course.slug %}" class="btn btn-sm btn-primary rounded-end-pill px-3"><i class="fas fa-cog me-1"></i> Manage</a>
-                          </div>
-                        </td>
-                      </tr>
-                    {% empty %}
-                      <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                          <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
-                          <p>No courses found. Start teaching today!</p>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-4 text-center h-100" style="background: var(--card-bg); border-radius: 15px; border-left: 5px solid var(--primary-cyan) !important;">
+            <i class="fas fa-user-check fa-2x text-info mb-3"></i>
+            <h6 class="text-muted small fw-bold">Total Enrollments</h6>
+            <h3 class="fw-bold mb-0" style="color: var(--text-dark);">{{ total_enrollments }}</h3>
           </div>
         </div>
       </div>
-    </main>
-  </div>
-{% endblock %}
 
-{% block extra_js %}
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const sidebar = document.getElementById('sidebar')
-      const mainContent = document.getElementById('main-content')
-      const toggleBtn = document.getElementById('toggleSidebar')
-      const toggleIcon = document.getElementById('toggleIcon')
-      const footer = document.querySelector('footer')
-      const navbar = document.querySelector('.navbar')
-    
-      function setSidebarState(isCollapsed) {
-        if (isCollapsed) {
-          sidebar.classList.add('collapsed')
-          mainContent.classList.add('expanded')
-          if (footer) footer.classList.add('expanded')
-          if (navbar) navbar.classList.add('expanded')
-          toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right')
-        } else {
-          sidebar.classList.remove('collapsed')
-          mainContent.classList.remove('expanded')
-          if (footer) footer.classList.remove('expanded')
-          if (navbar) navbar.classList.remove('expanded')
-          toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left')
-        }
-      }
-    
-      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true'
-      setSidebarState(isCollapsed)
-    
-      toggleBtn.addEventListener('click', () => {
-        const newState = !sidebar.classList.contains('collapsed')
-        setSidebarState(newState)
-        localStorage.setItem('sidebar-collapsed', newState)
-      })
-    })
-  </script>
+      <div class="col-12" id="my-courses-section">
+        <div class="card border-0 shadow-sm" style="background: var(--card-bg); border-radius: 15px; overflow: hidden;">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h5 class="fw-bold mb-0" style="color: var(--text-dark);"><i class="fas fa-list me-2 text-primary"></i>My Published Courses</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr class="text-muted small">
+                  <th class="ps-4">Course Info</th>
+                  <th>Category</th>
+                  <th>Students</th>
+                  <th>Status</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for course in my_course %}
+                  <tr>
+                    <td class="ps-4">
+                      <div class="d-flex align-items-center">
+                        <img src="{{ course.thumbnail.url }}" width="50" height="50" class="rounded me-3 shadow-sm" style="object-fit: cover;" />
+                        <div>
+                          <span class="fw-bold d-block" style="color: var(--text-dark);">{{ course.title }}</span>
+                          <small class="text-muted">ID: #{{ course.id }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ course.master_category.title }}</span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <i class="fas fa-users me-2 text-muted"></i>
+                        <span class="fw-semibold">{{ course.enrollment_count }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {% if course.is_active %}
+                        <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>
+                      {% else %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning px-3">Draft</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group shadow-sm">
+                        <a href="{% url 'manage_curriculum' course.slug %}" class="btn btn-sm btn-outline-primary px-3 rounded-start-pill"><i class="fas fa-edit me-1"></i> Lessons</a>
+                        <a href="{% url 'course_detail_edit' course.slug %}" class="btn btn-sm btn-primary px-3 rounded-end-pill"><i class="fas fa-cog me-1"></i> Manage</a>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                      <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                      <p>No courses found. Start teaching today!</p>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
