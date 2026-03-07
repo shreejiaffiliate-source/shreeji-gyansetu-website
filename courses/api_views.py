@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from rest_framework.permissions import IsAuthenticated
+import razorpay
+from django.conf import settings
 
 User = get_user_model()
 
@@ -282,3 +284,49 @@ def mark_notification_read(request, notification_id):
         return Response({"status": "success"})
     except Notification.DoesNotExist:
         return Response({"error": "Not found"}, status=404)
+    
+class CourseDetailView(generics.RetrieveAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request}) # CRITICAL for last_position
+        return context
+    
+# Initialize Razorpay Client
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+class EnrollCourseView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        course_id = request.data.get('course_id')
+        payment_id = request.data.get('razorpay_payment_id') # New field from Flutter
+
+        if not payment_id:
+            return Response({"error": "Payment ID is required"}, status=400)
+
+        try:
+            # 1. Verify Payment with Razorpay
+            payment_details = client.payment.fetch(payment_id)
+            
+            # Check if payment is authorized/captured and amount matches
+            if payment_details['status'] not in ['authorized', 'captured']:
+                return Response({"error": "Payment not verified"}, status=400)
+
+            # 2. Proceed with Enrollment
+            course = Course.objects.get(id=course_id)
+            if course.students.filter(id=request.user.id).exists():
+                return Response({"message": "Already enrolled"}, status=200)
+            
+            course.students.add(request.user)
+            return Response({"message": "Enrolled successfully"}, status=201)
+            
+        except razorpay.errors.BadRequestError:
+            return Response({"error": "Invalid Payment ID"}, status=400)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

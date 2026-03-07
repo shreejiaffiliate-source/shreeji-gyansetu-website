@@ -17,7 +17,8 @@ from courses.views import (
     resolved_inquiries_list, mark_lesson_complete, teacher_queries, 
     reply_query, submit_lesson_query, admin_communication_hub, 
     student_queries, all_platform_courses, teacher_my_courses_view,
-    teacher_upload_course_sb, edit_profile_sb
+    teacher_upload_course_sb, edit_profile_sb, update_lesson_progress,
+    verify_payment
 )
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
@@ -73,6 +74,7 @@ urlpatterns = [
     path('live-classes/', live_classes, name='live_classes'),
     path('teacher/<str:username>/', teacher_detail, name='teacher_detail'),
     path('dashboard/profile/edit/', edit_profile_sb, name='edit_profile_sb'),
+    path('lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='update_progress'),
     
     # Admin Console
     path('admin-console/courses/', all_platform_courses, name='all_platform_courses'),
@@ -104,6 +106,10 @@ urlpatterns = [
     path('api/lessons/<int:lesson_id>/queries/list/', api_views.LessonQueryListView.as_view(), name='api_query_list'),
     path('api/notifications/', api_views.NotificationListView.as_view(), name='api_notifications'),
     path('api/notifications/<int:notification_id>/read/', api_views.mark_notification_read, name='mark_notification_read'),
+    path('api/lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='api_update_progress'),
+
+    # Payment
+    path('verify-payment/', verify_payment, name='verify_payment'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

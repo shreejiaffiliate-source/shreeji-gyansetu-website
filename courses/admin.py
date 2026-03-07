@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin.exceptions import NotRegistered
 from .models import (
@@ -29,6 +30,7 @@ class CourseAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('students',)
     inlines = [ModuleInline]
+    actions = ['unenroll_all_students']
 
     # 1. Filter the Teacher dropdown
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -41,6 +43,17 @@ class CourseAdmin(admin.ModelAdmin):
         if db_field.name == 'students':
             kwargs['queryset'] = User.objects.filter(profile__user_type='Student')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    @admin.action(description='Unenroll all students from selected courses')
+    def unenroll_all_students(self, request, queryset):
+        for course in queryset:
+            student_count = course.students.count()
+            course.students.clear() # Removes all relationships
+            self.message_user(
+                request, 
+                f"Successfully unenrolled {student_count} students from {course.title}.", 
+                messages.SUCCESS
+            )
 
 
 @admin.register(Module)
@@ -59,7 +72,7 @@ class ModuleAdmin(admin.ModelAdmin):
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     # Ensure course is at the top
-    fields = ('course', 'module', 'title', 'thumbnail', 'lecturer_name', 'description', 'lesson_type', 'video_url', 'content_file', 'notes_file', 'is_preview', 'order')
+    fields = ('course', 'module', 'title', 'thumbnail', 'lecturer_name', 'description', 'lesson_type', 'video_url', 'content_file', 'notes_file', 'is_preview', 'order', 'resources')
     list_display = ('id', 'title', 'lecturer_name', 'course_id', 'module_id', 'lesson_type', 'is_preview', 'order')
     list_filter = ('lesson_type', 'course', 'module')
     
@@ -109,13 +122,20 @@ except NotRegistered:
     pass
 admin.site.register(User, UserAdmin)
 
+@admin.action(description='Reset selected progress to beginning (0.0s)')
+def reset_watch_history(modeladmin, request, queryset):
+    """Sets last_position to 0 so students can re-watch from start"""
+    queryset.update(last_position=0.0, is_completed=False)
+    modeladmin.message_user(request, "Selected watch history has been reset.")
+
 @admin.register(UserLessonProgress)
 class UserLessonProgressAdmin(admin.ModelAdmin):
     # This allows you to see the user, lesson, and status at a glance
-    list_display = ('user', 'lesson', 'is_completed', 'completed_at')
+    list_display = ('user', 'lesson', 'last_position', 'is_completed', 'completed_at')
     # This adds a filter sidebar for easy tracking
     list_filter = ('is_completed', 'user', 'lesson__course')
     search_fields = ('user__username', 'lesson__title')
+    actions = [reset_watch_history]
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):

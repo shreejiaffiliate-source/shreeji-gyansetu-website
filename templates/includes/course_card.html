@@ -10,7 +10,14 @@
       <h6 class="fw-bold mb-2" style="color: var(--text-dark);">{{ course.title }}</h6>
 
       <div class="d-flex justify-content-between align-items-center mb-3" style="min-height: 30px;">
-        <p class="fw-bold mb-0" style="color: var(--primary-green); font-size: 1.1rem;">₹{{ course.price }}</p>
+        <div class="d-flex align-items-center gap-2">
+          {% if course.discount_price %}
+            <p class="fw-bold mb-0" style="color: var(--primary-green); font-size: 1.1rem;">₹{{ course.discount_price }}</p>
+            <span class="text-muted text-decoration-line-through small">₹{{ course.price }}</span>
+          {% else %}
+            <p class="fw-bold mb-0" style="color: var(--primary-green); font-size: 1.1rem;">₹{{ course.price }}</p>
+          {% endif %}
+        </div>
 
         {% if course.is_live %}
           <div class="live-wrapper">

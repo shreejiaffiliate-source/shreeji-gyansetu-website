@@ -37,12 +37,14 @@ class LessonSerializer(serializers.ModelSerializer):
     video_url = serializers.SerializerMethodField()
     notes_file = serializers.SerializerMethodField()
     is_preview = serializers.BooleanField(default=False)
+    last_position = serializers.SerializerMethodField()
+    is_completed = serializers.SerializerMethodField()
 
 
     class Meta:
         model = Lesson
         # Include content_file if you need it, but video_url is what the player uses
-        fields = ['id', 'title', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order', 'notes_file']
+        fields = ['id', 'title', 'lesson_type', 'video_url', 'content_file', 'is_preview', 'order', 'notes_file', 'last_position', 'resources', 'is_completed']
 
     def get_video_url(self, obj):
         # 1. Check if an actual file was uploaded to 'content_file'
@@ -65,6 +67,23 @@ class LessonSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.notes_file.url)
             return obj.notes_file.url
         return None
+    
+    def get_last_position(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            # Look up the progress for this specific user and lesson
+            progress = UserLessonProgress.objects.filter(user=user, lesson=obj).first()
+            return progress.last_position if progress else 0.0
+        return 0.0
+    
+    def get_is_completed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # Check the progress table for the boolean
+            progress = UserLessonProgress.objects.filter(user=request.user, lesson=obj).first()
+            if progress:
+                return progress.is_completed
+        return False
 
 class ModuleSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)

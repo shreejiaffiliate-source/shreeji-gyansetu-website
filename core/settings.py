@@ -122,3 +122,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID = 'rzp_test_SOCWZ8L1q01O7W'  # Replace with your actual Key ID
+RAZORPAY_KEY_SECRET = '5TdpyMGMMCIlOPu69YoW61Zs'  # Replace with your actual Secret Key
+
+# It's good practice to toggle between Test and Live modes here
+RAZORPAY_IS_LIVE = False

@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseForbidden
 from django.contrib.auth import login, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.db.models import Q, Count, Prefetch, Sum
@@ -13,6 +14,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.views.decorators.cache import never_cache
+import razorpay
+from django.conf import settings
+
 # Use get_user_model for compatibility with your custom user setup
 User = get_user_model()
 
@@ -268,8 +272,26 @@ def change_password(request):
 
 def course_detail(request, slug):
     course = get_object_or_404(Course, slug=slug)
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    amount = int(course.discount_price * 100) if course.discount_price else int(course.price * 100)
     modules = course.modules.all().prefetch_related('lessons')
-    return render(request, 'courses/course_detail.html', {'course': course, 'modules': modules})
+
+    order_data = {
+        'amount': amount,
+        'currency': 'INR',
+        'payment_capture': '1' # Auto-capture payment
+    }
+    razorpay_order = client.order.create(data=order_data)
+
+    context = {
+        'course': course,
+        'razorpay_order_id': razorpay_order['id'],
+        'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
+        'amount': amount,
+        'modules': modules,
+    }
+
+    return render(request, 'courses/course_detail.html', context)
 
 def lesson_detail(request, course_slug, lesson_id):
     course = get_object_or_404(Course, slug=course_slug)
@@ -883,3 +905,81 @@ def edit_profile_sb(request):
         'p_form': p_form
     }
     return render(request, 'courses/edit_profile_sb.html', context)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_lesson_progress(request, lesson_id):
+    try:
+        lesson = Lesson.objects.get(id=lesson_id)
+        # Get or create progress record for this user
+        progress, created = UserLessonProgress.objects.get_or_create(
+            user=request.user, 
+            lesson=lesson
+        )
+
+        last_position = request.data.get('last_position')
+        
+        if last_position is not None:
+            # 2. Update the model field
+            progress.last_position = float(last_position)
+            # 3. Save to database
+            progress.save()
+        
+        # Update the position sent from Flutter
+        return Response({
+            'status': 'progress updated',
+            'saved_position': progress.last_position
+        })
+    except Lesson.DoesNotExist:
+        return Response({'error': 'Lesson not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    
+@staff_member_required
+def admin_unenroll_student(request, course_id, user_id):
+    course = get_object_or_404(Course, id=course_id)
+    student = get_object_or_404(User, id=user_id)
+    
+    if student in course.students.all():
+        course.students.remove(student)
+        # Also delete their progress data so they start fresh if they re-enroll
+        UserLessonProgress.objects.filter(user=student, lesson__course=course).delete()
+        messages.success(request, f"{student.username} has been unenrolled from {course.title}")
+    
+    return redirect(request.META.get('HTTP_REFERER', '/admin/'))
+
+def verify_payment(request):
+    payment_id = request.GET.get('payment_id')
+    course_id = request.GET.get('course_id')
+    course = get_object_or_404(Course, id=course_id)
+    
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    
+    try:
+        payment_details = client.payment.fetch(payment_id)
+        
+        # Check for both 'authorized' and 'captured'
+        if payment_details['status'] in ['authorized', 'captured']:
+            course.students.add(request.user)
+            
+            # Fetch the first lesson safely to avoid errors in the template
+            first_lesson = course.modules.first().lessons.first() if course.modules.exists() else None
+
+            return render(request, 'payment_success.html', {
+                'course': course,
+                'payment_id': payment_id,
+                'first_lesson': first_lesson
+            })
+        else:
+            return render(request, 'payment_failed.html', {
+                'course': course,
+                'error_message': f"Payment status is {payment_details['status']}"
+            })
+            
+    except Exception as e:
+        # This will print the actual error to your terminal so you can see it
+        print(f"Payment Verification Error: {e}") 
+        return render(request, 'payment_failed.html', {
+            'course': course,
+            'error_message': str(e)
+        })

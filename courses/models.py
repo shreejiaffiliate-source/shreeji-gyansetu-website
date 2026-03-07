@@ -160,6 +160,12 @@ class Lesson(models.Model):
     is_preview = models.BooleanField(default=False, help_text="Check if this is a free demo lesson")
     order = models.PositiveIntegerField(default=0)
 
+    resources = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Add links or descriptions of resources here (e.g. GitHub link, useful websites)"
+    )
+
     class Meta:
         verbose_name_plural = "4. Lessons"
         ordering = ['order']
@@ -170,6 +176,7 @@ class Lesson(models.Model):
 class UserLessonProgress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lesson_progress')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='user_progress')
+    last_position = models.FloatField(default=0.0)
     is_completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(auto_now_add=True)
 

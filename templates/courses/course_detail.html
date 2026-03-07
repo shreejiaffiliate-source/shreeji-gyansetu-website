@@ -95,7 +95,7 @@
                 {% if user in course.students.all %}
                   <a href="{% url 'student_dashboard' %}" class="btn btn-success btn-lg w-100 mb-3 py-3 fw-bold"><i class="fas fa-play-circle me-2"></i> Go to Dashboard</a>
                 {% else %}
-                  <a href="{% url 'enroll_course' course.slug %}" class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Enroll Now</a>
+                  <button id="rzp-button1" class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Enroll Now</button>
                 {% endif %}
               {% else %}
                 <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-dark btn-lg w-100 mb-3 py-3 fw-bold btn-enroll">Login to Enroll</a>
@@ -135,4 +135,32 @@
       </div>
     </div>
   </div>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    var options = {
+      key: '{{ razorpay_merchant_key }}',
+      amount: '{{ amount }}',
+      currency: 'INR',
+      name: 'Shreeji GyanSetu',
+      description: '{{ course.title }}',
+      order_id: '{{ razorpay_order_id }}',
+      handler: function (response) {
+        // Success: Redirect to verify payment view
+        window.location.href = '/verify-payment/?payment_id=' + response.razorpay_payment_id + '&course_id={{ course.id }}'
+      },
+      prefill: {
+        name: '{{ user.get_full_name }}',
+        email: '{{ user.email }}'
+      },
+      theme: {
+        color: '#00bcd4' // Matches primary Cyan theme
+      }
+    }
+    var rzp1 = new Razorpay(options)
+    document.getElementById('rzp-button1').onclick = function (e) {
+      rzp1.open()
+      e.preventDefault()
+    }
+  </script>
 {% endblock %}
