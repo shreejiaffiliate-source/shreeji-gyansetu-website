@@ -321,7 +321,6 @@ class LessonQuery(models.Model):
         
         if not is_new:
             try:
-                # Use .only() to make this faster
                 old_instance = LessonQuery.objects.only('answer').get(pk=self.pk)
                 old_answer = old_instance.answer
             except LessonQuery.DoesNotExist:
@@ -329,44 +328,52 @@ class LessonQuery(models.Model):
 
         super().save(*args, **kwargs)
 
-        # 1. NOTIFY TEACHER: When a student creates a new query
+        # 1. NOTIFY TEACHER
         if is_new:
             teacher = self.lesson.course.teacher
             if teacher:
                 from .models import Notification
-                Notification.objects.create(
+                # Create notification and get the instance
+                notif = Notification.objects.create(
                     user=teacher,
                     query=self,
                     message=f"New query from {self.student.username} in {self.lesson.title}"
                 )
 
-                # Push Notification to Teacher
                 if hasattr(teacher, 'profile') and teacher.profile.fcm_token:
                     send_push_notification(
                         fcm_token=teacher.profile.fcm_token,
                         title="New Student Question",
                         body=f"{self.student.username} asked a question in {self.lesson.title}",
                         lesson_id=self.lesson.id,
-                        data={"lesson_id": str(self.lesson.id), "type": "query"}
+                        data={
+                            "lesson_id": str(self.lesson.id), 
+                            "type": "query",
+                            "notification_id": str(notif.id) # ✅ ID bheji taaki teacher ke dashboard se badge hate
+                        }
                     )
 
-        # 2. NOTIFY STUDENT: When teacher adds a reply
+        # 2. NOTIFY STUDENT
         elif not old_answer and self.answer:
             from .models import Notification
-            Notification.objects.create(
+            # Create notification and get the instance
+            notif = Notification.objects.create(
                 user=self.student,
                 query=self,
                 message=f"Your teacher replied to your query in {self.lesson.title}"
             )
 
-            # Push Notification to Student
             if hasattr(self.student, 'profile') and self.student.profile.fcm_token:
                 send_push_notification(
                     fcm_token=self.student.profile.fcm_token,
                     title="Teacher Replied!",
                     body=f"Check the answer for your question in {self.lesson.title}",
                     lesson_id=self.lesson.id,
-                    data={"lesson_id": str(self.lesson.id), "type": "reply"}
+                    data={
+                        "lesson_id": str(self.lesson.id), 
+                        "type": "reply",
+                        "notification_id": str(notif.id) # ✅ ID bheji taaki student ke icon se badge hate
+                    }
                 )
     
 class Notification(models.Model):

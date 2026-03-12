@@ -4,40 +4,36 @@ import os
 from django.conf import settings
 
 def send_push_notification(fcm_token, title, body, lesson_id, data=None):
-    """
-    Sends a push notification to a specific device via FCM token.
-    lesson_id is REQUIRED now to open the correct video on click.
-    """
-    # --- INTERNAL INITIALIZATION ---
+    # --- JWT FIX: FORCE RE-INITIALIZATION ---
     try:
-        firebase_admin.get_app()
+        # Pehle se maujood app ko nikalne ki koshish karein
+        app = firebase_admin.get_app()
+        firebase_admin.delete_app(app)
     except ValueError:
-        path_to_json = os.path.join(settings.BASE_DIR, 'firebase-credentials.json')
-        if os.path.exists(path_to_json):
-            cred = credentials.Certificate(path_to_json)
-            firebase_admin.initialize_app(cred)
-        else:
-            print(f"❌ ERROR: {path_to_json} file missing!")
-            return False
+        pass # App nahi thi, koi baat nahi
+
+    path_to_json = os.path.join(settings.BASE_DIR, 'firebase-credentials.json')
+    
+    if not os.path.exists(path_to_json):
+        print(f"❌ ERROR: {path_to_json} missing!")
+        return False
 
     try:
-        # Data payload preparation
+        cred = credentials.Certificate(path_to_json)
+        firebase_admin.initialize_app(cred)
+        
         payload_data = data or {}
         payload_data.update({
             "title": str(title),
             "body": str(body),
             "click_action": "FLUTTER_NOTIFICATION_CLICK",
-            # ✅ LESSON_ID: Isse Flutter ko pata chalega kaunsa video kholna hai
             "lesson_id": str(lesson_id), 
         })
 
         message = messaging.Message(
-            notification=messaging.Notification(
-                title=str(title),
-                body=str(body),
-            ),
+            notification=messaging.Notification(title=str(title), body=str(body)),
             data=payload_data,
-            token=fcm_token,
+            token=str(fcm_token),
             android=messaging.AndroidConfig(
                 priority='high',
                 notification=messaging.AndroidNotification(
@@ -49,7 +45,7 @@ def send_push_notification(fcm_token, title, body, lesson_id, data=None):
         )
 
         response = messaging.send(message)
-        print(f'✅ Firebase Response: {response}')
+        print(f'✅ Firebase Success: {response}')
         return True
 
     except Exception as e:
