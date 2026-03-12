@@ -107,6 +107,7 @@ urlpatterns = [
     path('api/notifications/', api_views.NotificationListView.as_view(), name='api_notifications'),
     path('api/notifications/<int:notification_id>/read/', api_views.mark_notification_read, name='mark_notification_read'),
     path('api/lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='api_update_progress'),
+    path('api/profile/update-fcm/', api_views.UpdateFCMTokenView.as_view(), name='api_update_fcm'),
 
     # Payment
     path('verify-payment/', verify_payment, name='verify_payment'),

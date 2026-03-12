@@ -47,6 +47,7 @@ def home(request):
         'slides': Carousel.objects.filter(is_active=True),
         'popular_courses': Course.objects.filter(is_active=True)
                             .annotate(num_students=Count('students'))
+                            .distinct()
                             .order_by('-num_students')[:4],
         'new_courses': Course.objects.filter(is_active=True).order_by('-created_at')[:4],
         'success_stories': SuccessStory.objects.all()[:3],
@@ -275,6 +276,31 @@ def course_detail(request, slug):
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
     amount = int(course.discount_price * 100) if course.discount_price else int(course.price * 100)
     modules = course.modules.all().prefetch_related('lessons')
+    last_watched_lesson = None
+    completed_lesson_ids = []
+
+    if request.user.is_authenticated:
+        completed_lesson_ids = UserLessonProgress.objects.filter(
+            user=request.user, 
+            lesson__course=course, 
+            is_completed=True
+        ).values_list('lesson_id', flat=True)
+
+        last_progress = UserLessonProgress.objects.filter(
+            user=request.user, 
+            lesson__course=course
+        ).order_by('-id').first() # Using '-id' since it's most recent; or '-updated_at' if you added it
+        
+        if last_progress:
+            last_watched_lesson = last_progress.lesson
+
+    for module in modules:
+        lessons = module.lessons.all()
+        if lessons.exists():
+            # Module is done if every lesson ID is in the completed list
+            module.is_fully_completed = all(lesson.id in completed_lesson_ids for lesson in lessons)
+        else:
+            module.is_fully_completed = False
 
     order_data = {
         'amount': amount,
@@ -289,6 +315,8 @@ def course_detail(request, slug):
         'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
         'amount': amount,
         'modules': modules,
+        'completed_lesson_ids': completed_lesson_ids,
+        'last_watched_lesson': last_watched_lesson,
     }
 
     return render(request, 'courses/course_detail.html', context)
@@ -297,18 +325,39 @@ def lesson_detail(request, course_slug, lesson_id):
     course = get_object_or_404(Course, slug=course_slug)
     lesson = get_object_or_404(Lesson, id=lesson_id, course=course)
 
+    # 1. Initialize variables
     student_queries = []
-    if request.user.is_authenticated:
-        student_queries = LessonQuery.objects.filter(lesson=lesson, student=request.user)
+    last_position = 0  # Default start at the beginning
     
-    # Check enrollment/preview status
-    is_enrolled = request.user.is_authenticated and request.user in course.students.all()
-    if not (lesson.is_preview or is_enrolled or request.user == course.teacher):
-        return render(request, 'courses/lesson_locked.html', {'course': course, 'lesson': lesson})
+    if request.user.is_authenticated:
+        # 2. Fetch student's previous questions for this lesson
+        student_queries = LessonQuery.objects.filter(lesson=lesson, student=request.user)
+        
+        # 3. Fetch last watched position for this specific lesson
+        progress = UserLessonProgress.objects.filter(user=request.user, lesson=lesson).first()
+        if progress:
+            last_position = progress.last_position
 
+    # 4. Check enrollment/preview/teacher status
+    is_enrolled = request.user.is_authenticated and request.user in course.students.all()
+    is_teacher = request.user == course.teacher
+    
+    if not (lesson.is_preview or is_enrolled or is_teacher):
+        return render(request, 'courses/lesson_locked.html', {
+            'course': course, 
+            'lesson': lesson
+        })
+
+    # 5. Optimize module and lesson fetching
     modules = course.modules.all().prefetch_related('lessons')
+    
+    # 6. Render the player with all necessary context
     return render(request, 'courses/lesson_player.html', {
-        'course': course, 'lesson': lesson, 'modules': modules, 'student_queries': student_queries
+        'course': course, 
+        'lesson': lesson, 
+        'modules': modules, 
+        'student_queries': student_queries,
+        'last_position': last_position  # Used by JavaScript to set video.currentTime
     })
 
 @login_required
@@ -326,6 +375,11 @@ def student_dashboard(request):
         students=request.user, 
         is_active=True
     ).distinct()
+
+    for course in enrolled_courses:
+        # We call the model method here where request.user is easily available
+        course.template_progress = course.get_user_progress(request.user) * 100
+
     return render(request, 'courses/student_dashboard.html', {
         'enrolled_courses': enrolled_courses,
         'full_name': request.user.get_full_name() or request.user.username

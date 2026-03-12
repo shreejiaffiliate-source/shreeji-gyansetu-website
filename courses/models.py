@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
 from django.conf import settings
+from .utils import send_push_notification
 
 class MasterCategory(models.Model):
     title = models.CharField(max_length=100)
@@ -251,6 +252,7 @@ class Profile(models.Model):
     address = models.TextField(blank=True)
     college_name = models.CharField(max_length=200, blank=True, null=True)
     branch = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. Computer Science")
+    fcm_token = models.TextField(blank=True, null=True)
 
 
     # Teacher Specific Information
@@ -317,9 +319,13 @@ class LessonQuery(models.Model):
         is_new = self.pk is None
         old_answer = None
         
-        # If updating, grab the old answer to check for changes
         if not is_new:
-            old_answer = LessonQuery.objects.get(pk=self.pk).answer
+            try:
+                # Use .only() to make this faster
+                old_instance = LessonQuery.objects.only('answer').get(pk=self.pk)
+                old_answer = old_instance.answer
+            except LessonQuery.DoesNotExist:
+                old_answer = None
 
         super().save(*args, **kwargs)
 
@@ -334,6 +340,15 @@ class LessonQuery(models.Model):
                     message=f"New query from {self.student.username} in {self.lesson.title}"
                 )
 
+                # Push Notification to Teacher
+                if hasattr(teacher, 'profile') and teacher.profile.fcm_token:
+                    send_push_notification(
+                        fcm_token=teacher.profile.fcm_token,
+                        title="New Student Question",
+                        body=f"{self.student.username} asked a question in {self.lesson.title}",
+                        data={"lesson_id": str(self.lesson.id), "type": "query"}
+                    )
+
         # 2. NOTIFY STUDENT: When teacher adds a reply
         elif not old_answer and self.answer:
             from .models import Notification
@@ -342,6 +357,15 @@ class LessonQuery(models.Model):
                 query=self,
                 message=f"Your teacher replied to your query in {self.lesson.title}"
             )
+
+            # Push Notification to Student
+            if hasattr(self.student, 'profile') and self.student.profile.fcm_token:
+                send_push_notification(
+                    fcm_token=self.student.profile.fcm_token,
+                    title="Teacher Replied!",
+                    body=f"Check the answer for your question in {self.lesson.title}",
+                    data={"lesson_id": str(self.lesson.id), "type": "reply"}
+                )
     
 class Notification(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

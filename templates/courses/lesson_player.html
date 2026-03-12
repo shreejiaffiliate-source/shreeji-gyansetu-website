@@ -211,6 +211,70 @@
 {% block extra_js %}
   <script src="{% static 'js/video_controls.js' %}?v=1.1"></script>
   <script>
+    const videoPlayer = document.getElementById('courseVideo');
+    const saveUrl = "{% url 'update_progress' lesson.id %}";
+    const markCompleteUrl = "{% url 'mark_lesson_complete' lesson.id %}";
+    
+    // Get last position from Django context
+    const lastPos = parseFloat("{{ last_position|default:0 }}");
+
+    if (videoPlayer) {
+        // --- 1. RESUME VIDEO ---
+        // Jump to last watched position when video is ready
+        videoPlayer.addEventListener('loadedmetadata', function() {
+            if (lastPos > 0) {
+                videoPlayer.currentTime = lastPos;
+                console.log("Resuming from: " + lastPos + "s");
+            }
+        });
+
+        // --- 2. AUTO-SAVE PROGRESS ---
+        // Save current time to database every 5 seconds
+        let lastSavedTime = 0;
+        videoPlayer.addEventListener('timeupdate', function() {
+            const currentTime = Math.floor(videoPlayer.currentTime);
+            
+            // Only save if time has changed and is a multiple of 5
+            if (currentTime % 5 === 0 && currentTime !== lastSavedTime) {
+                lastSavedTime = currentTime;
+                
+                fetch(saveUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 'last_position': currentTime })
+                })
+                .catch(err => console.error("Auto-save failed:", err));
+            }
+        });
+
+        // --- 3. MARK COMPLETE ---
+        // Triggered when video finishes
+        videoPlayer.onended = function() {
+            console.log("Video finished. Marking as complete...");
+            
+            fetch(markCompleteUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("Congratulations! Lesson marked as completed.");
+                    // Optional: Refresh to show checkmarks in the sidebar
+                    // location.reload(); 
+                }
+            })
+            .catch(error => console.error('Error updating progress:', error));
+        };
+    }
+
+    // --- 4. PRINT NOTES ---
     function printLessonNotes() {
         const printContent = document.getElementById("printableNotes").innerHTML;
         const printWindow = window.open('', '_blank', 'height=600,width=800');

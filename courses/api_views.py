@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from rest_framework.permissions import IsAuthenticated
 import razorpay
 from django.conf import settings
+from django.db.models import Count
 
 User = get_user_model()
 
@@ -33,7 +34,9 @@ class AppHomeView(APIView):
     def get(self, request):
         sliders = Carousel.objects.filter(is_active=True).order_by('order')
         categories = MasterCategory.objects.all().order_by('order')
-        popular_courses = Course.objects.filter(is_active=True).order_by('-students', '-id').distinct()[:5]
+        popular_courses = Course.objects.filter(is_active=True).annotate(
+        num_students=Count('students')
+    ).order_by('-num_students', '-id').distinct()[:5]
         
         # Create a basic response dictionary
         data = {
@@ -330,3 +333,18 @@ class EnrollCourseView(APIView):
             return Response({"error": "Course not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
+class UpdateFCMTokenView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        fcm_token = request.data.get('fcm_token')
+        if not fcm_token:
+            return Response({"error": "Token is required"}, status=400)
+        
+        # Update the user's profile with the new token
+        profile = request.user.profile
+        profile.fcm_token = fcm_token
+        profile.save()
+        
+        return Response({"message": "FCM Token updated successfully"}, status=200)
