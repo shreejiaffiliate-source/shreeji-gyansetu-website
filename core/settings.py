@@ -76,8 +76,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
+
+# settings.py
+DATETIME_FORMAT = "d M Y, P"  # e.g., 21 Feb 2026, 12:40 p.m.
+USE_L10N = False  # Make Django use your DATETIME_FORMAT instead of locale default
 USE_TZ = True
 
 STATIC_URL = "static/"

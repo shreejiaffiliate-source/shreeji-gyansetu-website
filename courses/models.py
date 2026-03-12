@@ -346,6 +346,7 @@ class LessonQuery(models.Model):
                         fcm_token=teacher.profile.fcm_token,
                         title="New Student Question",
                         body=f"{self.student.username} asked a question in {self.lesson.title}",
+                        lesson_id=self.lesson.id,
                         data={"lesson_id": str(self.lesson.id), "type": "query"}
                     )
 
@@ -364,6 +365,7 @@ class LessonQuery(models.Model):
                     fcm_token=self.student.profile.fcm_token,
                     title="Teacher Replied!",
                     body=f"Check the answer for your question in {self.lesson.title}",
+                    lesson_id=self.lesson.id,
                     data={"lesson_id": str(self.lesson.id), "type": "reply"}
                 )
     
