@@ -133,3 +133,5 @@ RAZORPAY_KEY_SECRET = '5TdpyMGMMCIlOPu69YoW61Zs'  # Replace with your actual Sec
 
 # It's good practice to toggle between Test and Live modes here
 RAZORPAY_IS_LIVE = False
+
+GOOGLE_OAUTH2_CLIENT_ID = '305890739233-vl7frn1tvpo8kigp17aost7ffa86aidh.apps.googleusercontent.com'

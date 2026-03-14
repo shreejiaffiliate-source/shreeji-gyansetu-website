@@ -18,7 +18,8 @@ from courses.views import (
     reply_query, submit_lesson_query, admin_communication_hub, 
     student_queries, all_platform_courses, teacher_my_courses_view,
     teacher_upload_course_sb, edit_profile_sb, update_lesson_progress,
-    verify_payment
+    verify_payment, api_google_login, api_verify_email, api_register,
+    api_login
 )
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
@@ -28,6 +29,11 @@ admin.site.site_title = "GyanSetu Admin Portal"
 admin.site.index_title = "Welcome to Shreeji GyanSetu Management"
 
 urlpatterns = [
+    # New Authentication Endpoints
+    path('api/login/', api_login, name='api_login'),
+    path('api/register/', api_register, name='api_register'),
+    path('api/verify-email/', api_verify_email, name='api_verify_email'),
+    path('api/google-login/', api_google_login, name='api_google_login'),
     path("admin/", admin.site.urls),
     path("", home, name='home'),
     path('chained_filter/', include('smart_selects.urls')),
@@ -92,10 +98,11 @@ urlpatterns = [
     path('resolve-inquiry/<int:msg_id>/', resolve_inquiry, name='resolve_inquiry'),
 
     # API Endpoints
-    path('api/', api_views.ApiRoot.as_view(), name='api_root'),
-    path('api/login/', obtain_auth_token, name='api_token_auth'), # Returns a Token
-    path('api/register/', api_views.UserRegistrationView.as_view(), name='api_register'),
+    
+    # path('api/login/', obtain_auth_token, name='api_token_auth'), # Returns a Token
+    # path('api/register/', api_views.UserRegistrationView.as_view(), name='api_register'),
     path('api/home/', api_views.AppHomeView.as_view(), name='api_home'),
+
     path('api/courses/', api_views.CourseListView.as_view(), name='api_courses'),
     path('api/my-learning/', api_views.MyCoursesView.as_view(), name='api_my_learning'),
     path('api/profile/', api_views.UserProfileView.as_view(), name='api_profile'),
@@ -108,6 +115,11 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/read/', api_views.mark_notification_read, name='mark_notification_read'),
     path('api/lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='api_update_progress'),
     path('api/profile/update-fcm/', api_views.UpdateFCMTokenView.as_view(), name='api_update_fcm'),
+
+    
+
+    path('api/', api_views.ApiRoot.as_view(), name='api_root'),
+
 
     # Payment
     path('verify-payment/', verify_payment, name='verify_payment'),

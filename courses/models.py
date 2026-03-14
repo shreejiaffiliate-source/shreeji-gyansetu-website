@@ -246,6 +246,13 @@ class Profile(models.Model):
     ]
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+
+    # ✅ NAYE FIELDS FOR VERIFICATION & GOOGLE LOGIN
+    is_email_verified = models.BooleanField(default=False)
+    email_verification_token = models.CharField(max_length=100, blank=True, null=True)
+    google_id = models.CharField(max_length=255, blank=True, null=True) # Google user identification
+    auth_provider = models.CharField(max_length=50, default='email') # 'email' or 'google'
+
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='Student')
     photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True, default='default_user.png')
     phone_number = models.CharField(max_length=15, blank=True)
@@ -270,7 +277,7 @@ class Profile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.user_type}"
+        return f"{self.user.username} - {self.user_type} (Verified: {self.is_email_verified})"
     
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)

@@ -11,11 +11,15 @@ from django.conf import settings
 from django.contrib.auth import logout
 from .forms import ReplyForm
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.views.decorators.cache import never_cache
 import razorpay
 from django.conf import settings
+import random
+import string
+from django.utils.crypto import get_random_string
+from rest_framework.authtoken.models import Token
 
 # Use get_user_model for compatibility with your custom user setup
 User = get_user_model()
@@ -1037,3 +1041,174 @@ def verify_payment(request):
             'course': course,
             'error_message': str(e)
         })
+
+# Helper function to generate 6-digit OTP
+def generate_otp():
+    return ''.join(random.choices(string.digits, k=6))
+
+# --- API: EMAIL REGISTRATION WITH OTP ---
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_register(request):
+    """
+    API version of registration that sends a 6-digit verification OTP.
+    """
+    data = request.data
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    user_type = data.get('user_type', 'Student')
+
+    if User.objects.filter(username=username).exists():
+        return Response({"error": "Username already taken"}, status=400)
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email already registered"}, status=400)
+
+    # 1. Create User (Inactive until OTP verified)
+    user = User.objects.create_user(username=username, email=email, password=password)
+    user.is_active = False 
+    user.save()
+
+    # 2. Update Profile with OTP
+    otp = generate_otp()
+    profile = user.profile
+    profile.user_type = user_type
+    profile.email_verification_token = otp
+    profile.auth_provider = 'email'
+    profile.save()
+
+    # 3. Send Verification Email
+    try:
+        send_mail(
+            subject='Verify your email - Shreeji GyanSetu',
+            message=f'Your verification code is: {otp}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return Response({"message": "OTP sent to your email."}, status=201)
+    except Exception as e:
+        return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
+    
+# --- API: VERIFY OTP ---
+@api_view(['POST'])
+def api_verify_email(request):
+    """
+    Verifies the 6-digit OTP and activates the user account.
+    """
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+
+    try:
+        user = User.objects.get(email=email)
+        profile = user.profile
+
+        if profile.email_verification_token == otp:
+            profile.is_email_verified = True
+            profile.email_verification_token = None # Clear OTP after success
+            profile.save()
+
+            user.is_active = True # Activate user
+            user.save()
+
+            # Generate Token for Flutter so they can login immediately
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                "message": "Email verified successfully!",
+                "token": token.key
+            }, status=200)
+        else:
+            return Response({"error": "Invalid OTP"}, status=400)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+# --- API: GOOGLE SIGN-IN ---
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_google_login(request):
+    """
+    Handles Google Sign-In. If user exists, logins. If not, creates a verified account.
+    """
+    email = request.data.get('email')
+    google_id = request.data.get('google_id')
+    first_name = request.data.get('first_name', '')
+    last_name = request.data.get('last_name', '')
+
+    # Check if user already exists with this email
+    user = User.objects.filter(email=email).first()
+
+    if not user:
+        # Create new user for Google Sign-in
+        # Username is generated from email to keep it unique
+        username = email.split('@')[0] + "_" + get_random_string(5)
+        user = User.objects.create_user(username=username, email=email)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.is_active = True # Google users are pre-verified
+        user.save()
+
+        profile = user.profile
+        profile.is_email_verified = True
+        profile.google_id = google_id
+        profile.auth_provider = 'google'
+        profile.save()
+    else:
+        # User exists, ensure google_id is linked
+        profile = user.profile
+        if not profile.google_id:
+            profile.google_id = google_id
+            profile.auth_provider = 'google'
+            profile.is_email_verified = True # Trust Google's verification
+            profile.save()
+
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({
+        "token": token.key,
+        "username": user.username,
+        "user_type": profile.user_type,
+        "message": "Google login successful"
+    }, status=200)
+
+# --- NEW API LOGIN: SUPPORT USERNAME OR EMAIL ---
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_login(request):
+    """
+    Handles login using either Username OR Email.
+    """
+    login_id = request.data.get('login_id', '').strip() # Field name from Flutter
+    print(f"DEBUG: Searching for ID -> '{login_id}'")
+
+    exists = User.objects.filter(email__iexact=login_id).exists()
+    print(f"DEBUG: Does Email Exist? -> {exists}")
+    
+      
+    password = request.data.get('password')
+
+    if not login_id or not password:
+        return Response({"error": "Please provide both credentials"}, status=400)
+
+    # Search for user by username OR email using Q object
+    clean_id = login_id.strip() if login_id else ""
+    user = User.objects.filter(Q(username__iexact=clean_id) | Q(email__iexact=clean_id)).first()
+
+    if user:
+        if user.check_password(password):
+            # Check if email is verified
+            if hasattr(user, 'profile') and not user.profile.is_email_verified:
+                return Response({"error": "Email not verified. Please verify your email first."}, status=403)
+            
+            if not user.is_active:
+                return Response({"error": "This account is inactive."}, status=403)
+
+            # Generate or get Auth Token
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                "token": token.key,
+                "username": user.username,
+                "user_type": user.profile.user_type if hasattr(user, 'profile') else 'Student'
+            }, status=200)
+        else:
+            return Response({"error": "Invalid password"}, status=400)
+    else:
+        return Response({"error": "No user found with this Username/Email"}, status=404)

@@ -6,11 +6,10 @@ from django.conf import settings
 def send_push_notification(fcm_token, title, body, lesson_id, data=None):
     # --- JWT FIX: FORCE RE-INITIALIZATION ---
     try:
-        # Pehle se maujood app ko nikalne ki koshish karein
         app = firebase_admin.get_app()
         firebase_admin.delete_app(app)
     except ValueError:
-        pass # App nahi thi, koi baat nahi
+        pass 
 
     path_to_json = os.path.join(settings.BASE_DIR, 'firebase-credentials.json')
     
@@ -23,6 +22,7 @@ def send_push_notification(fcm_token, title, body, lesson_id, data=None):
         firebase_admin.initialize_app(cred)
         
         payload_data = data or {}
+        # Ensure lesson_id is always there
         payload_data.update({
             "title": str(title),
             "body": str(body),
@@ -30,9 +30,12 @@ def send_push_notification(fcm_token, title, body, lesson_id, data=None):
             "lesson_id": str(lesson_id), 
         })
 
+        # ✅ Loop through data to ensure all values are STRINGS (FCM requirement)
+        final_data = {k: str(v) for k, v in payload_data.items()}
+
         message = messaging.Message(
             notification=messaging.Notification(title=str(title), body=str(body)),
-            data=payload_data,
+            data=final_data, # Use the cleaned string data
             token=str(fcm_token),
             android=messaging.AndroidConfig(
                 priority='high',
