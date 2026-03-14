@@ -141,50 +141,99 @@ def search(request):
 # --- AUTH & PROFILE VIEWS ---
 
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
+            email = form.cleaned_data.get('email')
+            username = form.cleaned_data.get('username')
+
+            # 1. CLEANUP: Agar koi unverified user pehle se hai, toh use hata do
+            User.objects.filter(email=email, is_active=False).delete()
+
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
+            user.is_active = False  # ✅ Hamesha inactive rakho jab tak verify na ho
             user.save()
             
-            # 1. Always associate the profile immediately
+            # 2. Profile setup
             profile = user.profile
             selected_user_type = form.cleaned_data.get('user_type', 'Student')
             profile.user_type = selected_user_type
+            profile.is_email_verified = False
+            
+            # OTP Generation
+            otp = generate_otp() # Aapka helper function
+            profile.email_verification_token = otp
 
-            # 2. Flow for TEACHERS
             if selected_user_type == 'Teacher':
                 profile.qualification = form.cleaned_data.get('qualification')
                 profile.experience_years = form.cleaned_data.get('experience_years')
                 profile.is_approved = False
-                profile.save() # Save teacher profile as unapproved
-
-                try:
-                    send_mail(
-                        subject='Registration Submitted - Shreeji GyanSetu',
-                        message=f'Hi {user.first_name}, your registration is submitted to the admin. Let them clarify after that you can add your courses.',
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user.email],
-                        fail_silently=True, 
-                    )
-                    messages.success(request, "Registration submitted. Please wait for admin approval.")
-                except Exception as e:
-                    messages.error(request, f"Email error: {e}")
-
-                # ONLY Teachers go to the waiting page
-                return render(request, 'registration/waiting_approval.html', {'user': user})
-
-            # 3. Flow for STUDENTS
             else:
-                profile.is_approved = True # Students are usually approved by default
-                profile.save()
-                login(request, user) # Auto-login for students
-                return redirect('login_success')
+                profile.is_approved = True # Students are approved but still need email verification
+            
+            profile.save()
+
+            # 3. Send OTP Mail
+            try:
+                send_mail(
+                    subject='Verify Your Email - Shreeji GyanSetu',
+                    message=f'Hi {user.first_name}, your verification code is: {otp}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                # Session mein email save karo taaki verification page pe use kar sakein
+                request.session['verification_email'] = user.email
+                messages.success(request, "An OTP has been sent to your email. Please verify.")
+                return redirect('verify_email_web') # ✅ Is URL ko urls.py mein banana hoga
+            except Exception as e:
+                messages.error(request, f"Error sending email: {e}")
+                # Optional: delete user if mail fails to allow retry
+                user.delete() 
                 
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+def verify_email_web(request):
+    email = request.session.get('verification_email')
+    if not email:
+        return redirect('register')
+
+    if request.method == 'POST':
+        otp = request.POST.get('otp')
+        user = User.objects.filter(email=email, is_active=False).first()
+
+        if user and user.profile.email_verification_token == otp:
+            user.is_active = True
+            user.save()
+
+            profile = user.profile
+            user.profile.is_email_verified = True
+            user.profile.email_verification_token = None
+            user.profile.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend') # Auto login after verify
+
+            # Session se email saaf karo
+            if 'verification_email' in request.session:
+                del request.session['verification_email']
+
+            messages.success(request, "Email verified successfully!")
+            
+            # Redirect logic
+            if profile.user_type == 'Teacher':
+                return render(request, 'registration/waiting_approval.html', {'user': user})
+
+
+            return redirect('login_success')
+        else:
+            messages.error(request, "Invalid OTP!")
+            
+    return render(request, 'registration/verify_otp.html', {'email': email})
 
 def live_classes(request):
     return render(request, 'courses/live_classes.html', {
@@ -1059,6 +1108,10 @@ def api_register(request):
     password = data.get('password')
     user_type = data.get('user_type', 'Student')
 
+    old_inactive_user = User.objects.filter(email=email, is_active=False).first()
+    if old_inactive_user:
+        old_inactive_user.delete()
+
     if User.objects.filter(username=username).exists():
         return Response({"error": "Username already taken"}, status=400)
     if User.objects.filter(email=email).exists():
@@ -1074,6 +1127,7 @@ def api_register(request):
     profile = user.profile
     profile.user_type = user_type
     profile.email_verification_token = otp
+    profile.is_email_verified = False
     profile.auth_provider = 'email'
     profile.save()
 
@@ -1115,7 +1169,9 @@ def api_verify_email(request):
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 "message": "Email verified successfully!",
-                "token": token.key
+                "token": token.key,
+                "username": user.username,
+                "user_type": profile.user_type
             }, status=200)
         else:
             return Response({"error": "Invalid OTP"}, status=400)
@@ -1193,6 +1249,14 @@ def api_login(request):
     user = User.objects.filter(Q(username__iexact=clean_id) | Q(email__iexact=clean_id)).first()
 
     if user:
+        # ✅ FIX: Check karo kya user Active hai?
+        if not user.is_active:
+             return Response({
+                "error": "Email not verified. Please verify your email first.",
+                "needs_verification": True # Flutter ko hint dene ke liye
+            }, status=403)
+
+    if user:
         if user.check_password(password):
             # Check if email is verified
             if hasattr(user, 'profile') and not user.profile.is_email_verified:
@@ -1212,3 +1276,30 @@ def api_login(request):
             return Response({"error": "Invalid password"}, status=400)
     else:
         return Response({"error": "No user found with this Username/Email"}, status=404)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_resend_otp(request):
+    email = request.data.get('email')
+    user = User.objects.filter(email=email).first()
+
+    if not user:
+        return Response({"error": "User not found"}, status=404)
+
+    # Naya OTP generate karo
+    otp = generate_otp()
+    profile = user.profile
+    profile.email_verification_token = otp
+    profile.save()
+
+    try:
+        send_mail(
+            subject='Your New OTP - Shreeji GyanSetu',
+            message=f'Your new verification code is: {otp}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return Response({"message": "New OTP sent successfully!"}, status=200)
+    except Exception as e:
+        return Response({"error": "Failed to send email"}, status=500)

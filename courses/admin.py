@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin.exceptions import NotRegistered
+from django.contrib.sites.models import Site
 from .models import (
     MasterCategory, Course, Module, Lesson, UserLessonProgress, Notification,
     Carousel, SuccessStory, StudyMaterial, YouTubeChannel, Profile, ContactMessage
@@ -142,3 +143,16 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'message', 'is_read', 'created_at')
     list_filter = ('is_read', 'created_at')
     search_fields = ('user__username', 'message')
+
+
+try:
+    admin.site.unregister(Site)
+except admin.sites.NotRegistered:
+    pass
+
+# Ab naya registration jisme ID (pk) dikhegi
+@admin.register(Site)
+class SiteAdmin(admin.ModelAdmin):
+    # 'pk' ka matlab hota hai Primary Key (ID)
+    list_display = ('id', 'domain', 'name')
+    list_display_links = ('domain',)

@@ -19,7 +19,7 @@ from courses.views import (
     student_queries, all_platform_courses, teacher_my_courses_view,
     teacher_upload_course_sb, edit_profile_sb, update_lesson_progress,
     verify_payment, api_google_login, api_verify_email, api_register,
-    api_login
+    api_login, api_resend_otp, verify_email_web
 )
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
@@ -33,8 +33,10 @@ urlpatterns = [
     path('api/login/', api_login, name='api_login'),
     path('api/register/', api_register, name='api_register'),
     path('api/verify-email/', api_verify_email, name='api_verify_email'),
+    path('api/resend-otp/', api_resend_otp, name='api_resend_otp'),
     path('api/google-login/', api_google_login, name='api_google_login'),
     path("admin/", admin.site.urls),
+    path('accounts/', include('allauth.urls')),
     path("", home, name='home'),
     path('chained_filter/', include('smart_selects.urls')),
     path('category/<slug:slug>/', category_detail, name='category_detail'),
@@ -52,6 +54,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('login-success/', login_success, name='login_success'),
     path('register/', register, name='register'),
+    path('register/verify/', verify_email_web, name='verify_email_web'),
     
     # Teacher Management
     path('dashboard/teacher/upload/', upload_course, name='upload_course'),

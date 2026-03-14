@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    /* 6 Boxes ki styling */
+    .otp-field {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .otp-input {
+      width: 50px;
+      height: 60px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      transition: all 0.3s ease;
+    }
+    .otp-input:focus {
+      border-color: var(--primary-blue);
+      outline: none;
+      box-shadow: 0 0 8px rgba(var(--primary-blue-rgb), 0.2);
+    }
+    /* Mobile responsive */
+    @media (max-width: 400px) {
+      .otp-input {
+        width: 35px;
+        height: 45px;
+        font-size: 1.1rem;
+        gap: 5px;
+      }
+    }
+  </style>
+
+  <div class="container d-flex align-items-center justify-content-center py-5" style="min-height: 80vh;">
+    <div class="card border-0 shadow-lg p-4" style="width: 100%; max-width: 450px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border-color);">
+      <div class="text-center mb-4">
+        <div class="mb-3">
+          <i class="fas fa-user-check fa-3x" style="color: var(--primary-blue);"></i>
+        </div>
+        <h3 class="fw-bold" style="color: var(--text-dark);">Confirm OTP</h3>
+        <p style="color: var(--text-muted);">
+          Please enter the 6-digit code sent to <br />
+          <span class="fw-bold" style="color: var(--text-dark);">{{ email }}</span>
+        </p>
+      </div>
+
+      <form method="POST" id="otp-form">
+        {% csrf_token %}
+        <input type="hidden" name="otp" id="full-otp" />
+
+        <div class="otp-field mb-4">
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm btn-enroll">Verify OTP <i class="fas fa-arrow-right ms-2"></i></button>
+
+        <div class="text-center mt-4">
+          <p class="small mb-0" style="color: var(--text-dark);">
+            <span id="timer-container">Wait for <span id="timer-count" class="fw-bold" style="color: var(--text-dark);">02:00</span> to Resend</span>
+            <a href="javascript:void(0);" id="resend-btn" class="fw-bold text-decoration-none d-none" style="color: var(--primary-cyan);" onclick="handleResend()">Resend OTP</a>
+          </p>
+          <div id="resend-status" class="small mt-2 fw-bold"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const inputs = document.querySelectorAll('.otp-input')
+      const fullOtpInput = document.getElementById('full-otp')
+      const form = document.getElementById('otp-form')
+    
+      // 1. Box Navigation Logic
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length > 1) {
+            e.target.value = e.target.value.slice(0, 1)
+          }
+          if (e.target.value && index < inputs.length - 1) {
+            inputs[index + 1].focus()
+          }
+          updateFullOtp()
+        })
+    
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            inputs[index - 1].focus()
+          }
+        })
+    
+        input.addEventListener('paste', (e) => {
+          const data = e.clipboardData.getData('text').trim().slice(0, 6)
+          if (data.length === 6 && /^\d+$/.test(data)) {
+            inputs.forEach((inp, i) => (inp.value = data[i]))
+            inputs[5].focus()
+            updateFullOtp()
+          }
+          e.preventDefault()
+        })
+      })
+    
+      function updateFullOtp() {
+        let otp = ''
+        inputs.forEach((input) => (otp += input.value))
+        fullOtpInput.value = otp
+      }
+    
+      form.addEventListener('submit', (e) => {
+        updateFullOtp()
+        if (fullOtpInput.value.length !== 6) {
+          e.preventDefault()
+          alert('Please enter all 6 digits.')
+        }
+      })
+    
+      // 2. Timer & Resend Logic
+      let timeLeft = 120
+      const timerCount = document.getElementById('timer-count')
+      const timerContainer = document.getElementById('timer-container')
+      const resendBtn = document.getElementById('resend-btn')
+      const statusDiv = document.getElementById('resend-status')
+      let timerInterval
+    
+      function startTimer() {
+        clearInterval(timerInterval)
+        resendBtn.classList.add('d-none')
+        timerContainer.classList.remove('d-none')
+        timeLeft = 120
+    
+        timerInterval = setInterval(() => {
+          let minutes = Math.floor(timeLeft / 60)
+          let seconds = timeLeft % 60
+          timerCount.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+    
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval)
+            timerContainer.classList.add('d-none')
+            resendBtn.classList.remove('d-none')
+          }
+          timeLeft -= 1
+        }, 1000)
+      }
+    
+      window.handleResend = async function () {
+        statusDiv.innerHTML = '<span style="color: var(--primary-blue);">Sending...</span>'
+        try {
+          const response = await fetch("{% url 'api_resend_otp' %}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ email: '{{ email }}' })
+          })
+    
+          if (response.ok) {
+            statusDiv.innerHTML = '<span class="text-success">OTP Resent Successfully!</span>'
+            startTimer()
+          } else {
+            const data = await response.json()
+            statusDiv.innerHTML = `<span class="text-danger">${data.error || 'Failed to send'}</span>`
+          }
+        } catch (error) {
+          statusDiv.innerHTML = '<span class="text-danger">Network Error!</span>'
+        }
+      }
+    
+      // Initialize Timer
+      startTimer()
+    })
+  </script>
+{% endblock %}

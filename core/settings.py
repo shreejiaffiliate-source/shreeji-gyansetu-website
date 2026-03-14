@@ -13,12 +13,24 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
     "users",
     "courses",
     "smart_selects",
     "rest_framework",
     "rest_framework.authtoken",
-    "corsheaders"
+    "corsheaders",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 MIDDLEWARE = [
@@ -30,6 +42,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -135,3 +148,27 @@ RAZORPAY_KEY_SECRET = '5TdpyMGMMCIlOPu69YoW61Zs'  # Replace with your actual Sec
 RAZORPAY_IS_LIVE = False
 
 GOOGLE_OAUTH2_CLIENT_ID = '305890739233-vl7frn1tvpo8kigp17aost7ffa86aidh.apps.googleusercontent.com'
+
+# Allauth settings
+ACCOUNT_EMAIL_VERIFICATION = "none" # Kyunki hum apna custom OTP logic use kar rahe hain
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_EMAIL_REQUIRED = True
+
+# Agar aap chahte ho ki Google se login ke baad direct dashboard jaye
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_LOGIN_ON_GET = True # Isse confirmation page skip ho jayega direct login hoga
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
+
+# Isse login failure ka asli error message terminal mein dikhega
+SOCIALACCOUNT_ADAPTER = 'courses.adapters.MySocialAccountAdapter'
