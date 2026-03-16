@@ -101,11 +101,43 @@ class RegistrationForm(forms.ModelForm):
         return cleaned_data
     
 class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField(required=True) # Email compulsory karo
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
+        
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+    # ✅ Email Unique Check (Optional but Recommended)
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        # Check karo: Kya ye email kisi AUR user ke paas hai? 
+        # (Self ko exclude karke check kar rahe hain)
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email is already registered with another account.")
+        return email
 
 class ProfileUpdateForm(forms.ModelForm):
+    # In fields ko optional banana zaroori hai taaki validation fail na ho
+    gender = forms.ChoiceField(
+        choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    experience_years = forms.IntegerField(
+        required=False, 
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    qualification = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. M.Sc in Physics'})
+    )
+
     class Meta:
         model = Profile
         fields = ['photo', 'phone_number', 'address', 'bio',
@@ -117,14 +149,10 @@ class ProfileUpdateForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'qualification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. M.Sc in Physics'}),
-            'experience_years': forms.NumberInput(attrs={'class': 'form-control'}),
             'enrollment_number': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'college_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. IIT Delhi'}),
             'branch': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Mechanical, IT'}),
-            'gender': forms.Select(attrs={'class': 'form-select'}),
-        
         }
 class ReplyForm(forms.Form):
     message = forms.CharField(

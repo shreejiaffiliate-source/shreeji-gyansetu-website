@@ -19,7 +19,8 @@ from courses.views import (
     student_queries, all_platform_courses, teacher_my_courses_view,
     teacher_upload_course_sb, edit_profile_sb, update_lesson_progress,
     verify_payment, api_google_login, api_verify_email, api_register,
-    api_login, api_resend_otp, verify_email_web
+    api_login, api_resend_otp, verify_email_web, api_reset_password,
+    reset_password_web, api_mark_all_notifications_read, toggle_course_status
 )
 from courses import api_views
 from rest_framework.authtoken.views import obtain_auth_token
@@ -55,6 +56,9 @@ urlpatterns = [
     path('login-success/', login_success, name='login_success'),
     path('register/', register, name='register'),
     path('register/verify/', verify_email_web, name='verify_email_web'),
+    path('api/reset-password/', api_reset_password, name='api_reset_password'),
+    path('verify-otp/', verify_email_web, name='verify_email_web'),
+    path('reset-password/', reset_password_web, name='reset_password_web'),
     
     # Teacher Management
     path('dashboard/teacher/upload/', upload_course, name='upload_course'),
@@ -68,11 +72,13 @@ urlpatterns = [
     path('dashboard/teacher/queries/<int:query_id>/reply/', reply_query, name='reply_query'),
     path('dashboard/teacher/my-courses/', teacher_my_courses_view, name='teacher_my_courses'),
     path('dashboard/teacher/create-course/', teacher_upload_course_sb, name='teacher_upload_course_sb'),
-    
+    path('course/<slug:slug>/toggle-status/', toggle_course_status, name='toggle_course_status'),
+
     # Student Actions
     path('course/<slug:slug>/enroll/', enroll_course, name='enroll_course'),
     path('lesson/<int:lesson_id>/query/', submit_lesson_query, name='submit_lesson_query'),
     path('my-queries/', student_queries, name='student_queries'),
+    path('api/mark-all-notifications-read/', api_mark_all_notifications_read, name='api_mark_all_read'),
     
     # Public & General
     path('courses/', all_courses, name='all_courses'),
@@ -83,7 +89,7 @@ urlpatterns = [
     path('live-classes/', live_classes, name='live_classes'),
     path('teacher/<str:username>/', teacher_detail, name='teacher_detail'),
     path('dashboard/profile/edit/', edit_profile_sb, name='edit_profile_sb'),
-    path('lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='update_progress'),
+    path('lessons/<int:lesson_id>/update-progress/', update_lesson_progress, name='update_lesson_progress'),
     
     # Admin Console
     path('admin-console/courses/', all_platform_courses, name='all_platform_courses'),

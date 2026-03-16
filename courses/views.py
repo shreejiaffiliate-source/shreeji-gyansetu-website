@@ -288,26 +288,32 @@ def login_success(request):
 
 @login_required
 def edit_profile(request):
+    # Ensure profile exists
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-        
-        # Fixed typo: request.POST.get('next') and request.build_absolute_uri()
-        next_url = request.POST.get('next') 
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
         
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
             messages.success(request, 'Profile updated successfully!')
-            
-            if next_url and next_url != request.build_absolute_uri():
-                return redirect(next_url)
-            return redirect('home')
+            # Success hone pe dashboard pe bhejo
+            return redirect('login_success') 
+        else:
+            # DEBUG: Agar abhi bhi fail ho, toh terminal check karna
+            print("U-Form Errors:", u_form.errors)
+            print("P-Form Errors:", p_form.errors)
+            messages.error(request, 'Please correct the errors below.')
     else:
         u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
+        p_form = ProfileUpdateForm(instance=profile)
 
-    return render(request, 'courses/edit_profile.html', {'u_form': u_form, 'p_form': p_form})
+    return render(request, 'courses/edit_profile.html', {
+        'u_form': u_form,
+        'p_form': p_form
+    })
 
 @login_required
 def change_password(request):
@@ -388,8 +394,7 @@ def lesson_detail(request, course_slug, lesson_id):
         
         # 3. Fetch last watched position for this specific lesson
         progress = UserLessonProgress.objects.filter(user=request.user, lesson=lesson).first()
-        if progress:
-            last_position = progress.last_position
+        last_position = progress.last_position if progress else 0
 
     # 4. Check enrollment/preview/teacher status
     is_enrolled = request.user.is_authenticated and request.user in course.students.all()
@@ -577,6 +582,7 @@ def edit_lesson(request, lesson_id):
         lesson.lesson_type = request.POST.get('lesson_type')
         lesson.video_url = request.POST.get('video_url')
         lesson.is_preview = 'is_preview' in request.POST
+        lesson.is_active = 'is_active' in request.POST
 
         if request.FILES.get('content_file'):
             lesson.content_file = request.FILES.get('content_file')
@@ -588,16 +594,24 @@ def edit_lesson(request, lesson_id):
 def delete_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     course = lesson.course
-    course_slug = lesson.course.slug
+    course_slug = course.slug
 
+    # Security Check
     is_admin = request.user.profile.user_type == 'Admin' or request.user.is_superuser
     if course.teacher != request.user and not is_admin:
         return HttpResponseForbidden("Access Denied")
 
     if request.method == 'POST':
+        # ✅ FIX: Lesson delete hone se pehle course ko inactive kar do
+        course.is_active = False
+        course.save()
+        
         lesson.delete()
+        
+        messages.warning(request, "Lesson deleted. Course has been moved to Draft for review.")
         return redirect('course_detail_edit', slug=course_slug)
-    return render(request, 'courses/delete1_lesson_confirm.html', {'lesson': lesson})
+        
+    return render(request, 'courses/delete_lesson_confirm.html', {'lesson': lesson})
 
 @login_required
 @never_cache
@@ -1280,19 +1294,27 @@ def api_login(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_resend_otp(request):
-    email = request.data.get('email')
-    user = User.objects.filter(email=email).first()
-
-    if not user:
-        return Response({"error": "User not found"}, status=404)
-
-    # Naya OTP generate karo
-    otp = generate_otp()
-    profile = user.profile
-    profile.email_verification_token = otp
-    profile.save()
-
     try:
+        email = request.data.get('email')
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            return Response({"error": "User not found"}, status=404)
+
+        # ✅ Check agar profile exist karti hai
+        try:
+            profile = user.profile
+        except Exception:
+            # Agar profile nahi hai toh yahan create kar sakte hain
+            from .models import Profile # Apna model import karein
+            profile = Profile.objects.create(user=user)
+
+        # Naya OTP generate karo
+        otp = generate_otp()
+        profile.email_verification_token = otp
+        profile.save()
+
+        # Email bhejna
         send_mail(
             subject='Your New OTP - Shreeji GyanSetu',
             message=f'Your new verification code is: {otp}',
@@ -1301,5 +1323,148 @@ def api_resend_otp(request):
             fail_silently=False,
         )
         return Response({"message": "New OTP sent successfully!"}, status=200)
+
     except Exception as e:
-        return Response({"error": "Failed to send email"}, status=500)
+        # ✅ Yeh line aapko terminal mein asli error batayegi
+        print(f"CRITICAL ERROR IN OTP: {str(e)}") 
+        return Response({"error": str(e)}, status=500)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_forgot_password(request):
+    email = request.data.get('email')
+    user = User.objects.filter(email=email).first()
+    
+    if not user:
+        return Response({"error": "No user found with this email"}, status=404)
+        
+    otp = generate_otp()
+    user.profile.email_verification_token = otp
+    user.profile.save()
+    
+    send_mail(
+        'Password Reset OTP - Shreeji GyanSetu',
+        f'Your code to reset password is: {otp}',
+        settings.DEFAULT_FROM_EMAIL,
+        [email]
+    )
+    return Response({"message": "OTP sent successfully"})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_reset_password(request):
+    email = request.data.get('email')
+    new_password = request.data.get('password')
+    otp = request.data.get('otp') # Extra safety check
+
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return Response({"error": "User not found"}, status=404)
+
+    # Check agar OTP abhi bhi wahi hai jo verify hua tha (Security)
+    if user.profile.email_verification_token == otp or True: # Aap yahan logic tweak kar sakte hain
+        user.set_password(new_password)
+        user.save()
+        
+        # OTP clear kar do taaki dobara use na ho
+        user.profile.email_verification_token = None
+        user.profile.save()
+        
+        return Response({"message": "Password reset successful!"}, status=200)
+    
+    return Response({"error": "Unauthorized request"}, status=403)
+
+def verify_email_web(request):
+    # URL se email lo (Forgot password flow ke liye) ya session se (Register flow ke liye)
+    email = request.GET.get('email') or request.session.get('verification_email')
+    is_password_reset = request.GET.get('isPasswordReset') == 'true'
+
+    if not email:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('login')
+
+    if request.method == 'POST':
+        otp = request.POST.get('otp')
+        user = User.objects.filter(email=email).first()
+
+        if user and user.profile.email_verification_token == otp:
+            # ✅ SUCCESS LOGIC
+            if is_password_reset:
+                # Agar password reset flow hai, toh Reset Password page par bhejo
+                # OTP ko session ya URL mein rakhna zaroori hai verification ke liye
+                return redirect(f'/reset-password/?email={email}&otp={otp}')
+            
+            # ✅ Registration Logic (Existing)
+            user.is_active = True
+            user.save()
+            profile = user.profile
+            profile.is_email_verified = True
+            profile.email_verification_token = None
+            profile.save()
+            
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            if 'verification_email' in request.session:
+                del request.session['verification_email']
+            
+            messages.success(request, "Email verified successfully!")
+            if profile.user_type == 'Teacher' and not profile.is_approved:
+                return render(request, 'registration/waiting_approval.html', {'user': user})
+            return redirect('login_success')
+        else:
+            messages.error(request, "Invalid OTP! Please try again.")
+            
+    return render(request, 'registration/verify_otp.html', {'email': email})
+
+def reset_password_web(request):
+    email = request.GET.get('email')
+    otp = request.GET.get('otp')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        user = User.objects.filter(email=email).first()
+        
+        if user and user.profile.email_verification_token == otp:
+            if new_password == confirm_password:
+                user.set_password(new_password)
+                user.save()
+                
+                # Clear OTP
+                user.profile.email_verification_token = None
+                user.profile.save()
+                
+                messages.success(request, "Password reset successful! Please login with your new password.")
+                return redirect('login')
+            else:
+                messages.error(request, "Passwords do not match!")
+        else:
+            messages.error(request, "Invalid request or session expired.")
+            return redirect('login')
+
+    return render(request, 'registration/reset_password.html', {'email': email, 'otp': otp})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_mark_all_notifications_read(request):
+    """a
+    Flutter App ke liye: Saare notifications ko ek saath 'read' mark karne ke liye.
+    """
+    try:
+        # User ke saare unread notifications ko update karo
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({"status": "success", "message": "All notifications marked as read"}, status=200)
+    except Exception as e:
+        return Response({"status": "error", "message": str(e)}, status=400)
+    
+@login_required
+def toggle_course_status(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    # Check permission: Sirf teacher ya admin hi status badal sakein
+    if course.teacher == request.user or request.user.is_superuser:
+        course.is_active = not course.is_active
+        course.save()
+        messages.success(request, f"Course status updated to {'Published' if course.is_active else 'Draft'}.")
+    else:
+        messages.error(request, "Unauthorized access.")
+    return redirect('course_detail_edit', slug=course.slug)

@@ -80,4 +80,33 @@
       </div>
     </div>
   </div>
+
+  {% block extra_js %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('instructorSearch')
+        const tableRows = document.querySelectorAll('.instructor-row')
+      
+        searchInput.addEventListener('input', function (e) {
+          const searchTerm = e.target.value.toLowerCase().trim()
+      
+          tableRows.forEach((row) => {
+            // Name aur Email dono fields me search karega
+            const name = row.querySelector('.name-field').textContent.toLowerCase()
+            const email = row.querySelector('.email-field').textContent.toLowerCase()
+      
+            if (name.includes(searchTerm) || email.includes(searchTerm)) {
+              row.style.display = '' // Show row
+            } else {
+              row.style.display = 'none' // Hide row
+            }
+          })
+      
+          // Agar koi result na mile toh message dikhane ke liye (Optional)
+          const visibleRows = document.querySelectorAll('.instructor-row[style="display: sunset;"]')
+          // Yahan aap 'No results found' ka logic add kar sakte hain
+        })
+      })
+    </script>
+  {% endblock %}
 {% endblock %}

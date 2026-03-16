@@ -36,6 +36,7 @@ body {
   background: var(--card-bg) !important;
   border-bottom: 1px solid var(--border-color);
   padding: 0.8rem 0;
+  z-index: 1050 !important;
 }
 
 .navbar-brand span {
@@ -123,6 +124,24 @@ body {
 .btn-dark {
   background-color: var(--primary-blue);
   border: none;
+}
+
+.btn-google-custom {
+  transition: all 0.3s ease !important;
+  background: transparent !important;
+}
+
+.btn-google-custom:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important; /* Bahut halka grey */
+  border-color: var(--primary-cyan) !important;
+  color: var(--text-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark Mode ke liye adjustment */
+[data-theme="dark"] .btn-google-custom:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .fa-certificate {
@@ -414,6 +433,15 @@ input[type="file"]::file-selector-button {
 
 [data-theme="dark"] input[type="file"] {
   color: #adb5bd;
+}
+
+.profile-dropdown {
+  z-index: 9999 !important; /* Isse wo course content ke upar dikhega */
+}
+
+.dropdown-menu-end {
+  right: 0;
+  left: auto;
 }
 
 /* Ensure dropdown items inherit the theme text color */

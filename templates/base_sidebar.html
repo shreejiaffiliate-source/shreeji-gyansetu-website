@@ -131,6 +131,36 @@
       box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
     
+    /* Sidebar ke upar notification lane ke liye fix */
+    .django-messages-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1500 !important; /* Sidebar 1200 par hai, ye 1500 par */
+      width: 320px;
+      pointer-events: none; /* Taaki niche ke elements par click ho sake */
+    }
+    
+    .django-messages-container .alert {
+      pointer-events: auto; /* Sirf alert par click/close kaam karega */
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border: none;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      animation: slideInRight 0.4s ease-out;
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
     @media (max-width: 991px) {
       .sidebar {
         left: calc(-1 * var(--sidebar-width));
@@ -147,7 +177,22 @@
   </style>
 {% endblock %}
 
+{% comment %} {% block content %} {% endcomment %}
+
 {% block content %}
+  <div class="django-messages-container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          <div class="d-flex align-items-center">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+            <span>{{ message }}</span>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
   <div class="dashboard-wrapper">
     <nav class="sidebar shadow" id="sidebar">
       <div class="sidebar-header">

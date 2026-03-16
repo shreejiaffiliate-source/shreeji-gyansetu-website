@@ -8,7 +8,6 @@
 
           <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-
             <input type="hidden" name="next" value="{{ request.GET.next|default:request.META.HTTP_REFERER }}" />
 
             <div class="mb-4 text-center">
@@ -20,32 +19,39 @@
                 {% endif %}
               </div>
               <div class="mt-3">
-                <label class="form-label fw-bold d-block" style="color: var(--text-dark);">Change Profile Photo</label>
+                <label class="form-label fw-bold d-block">Change Profile Photo</label>
                 <div class="d-flex justify-content-center">
-                  <div class="custom-file-input" style="max-width: 300px;">{{ p_form.photo }}</div>
+                  <div class="custom-file-input" style="max-width: 300px;">
+                    {{ p_form.photo }}
+                    <div class="text-danger small">{{ p_form.photo.errors }}</div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold" style="color: var(--text-dark);">First Name</label>
+                <label class="form-label fw-bold">First Name</label>
                 {{ u_form.first_name }}
+                <div class="text-danger small">{{ u_form.first_name.errors }}</div>
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold" style="color: var(--text-dark);">Last Name</label>
+                <label class="form-label fw-bold">Last Name</label>
                 {{ u_form.last_name }}
+                <div class="text-danger small">{{ u_form.last_name.errors }}</div>
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-bold" style="color: var(--text-dark);">Email Address</label>
+              <label class="form-label fw-bold">Email Address</label>
               {{ u_form.email }}
+              <div class="text-danger small">{{ u_form.email.errors }}</div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-bold" style="color: var(--text-dark);">Phone Number</label>
+              <label class="form-label fw-bold">Phone Number</label>
               {{ p_form.phone_number }}
+              <div class="text-danger small">{{ p_form.phone_number.errors }}</div>
             </div>
 
             <hr class="my-4" style="border-color: var(--border-color); opacity: 0.2;" />
@@ -54,50 +60,58 @@
               <h5 class="fw-bold mb-3" style="color: var(--primary-cyan);">Teacher Professional Details</h5>
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Highest Qualification</label>
+                  <label class="form-label fw-bold">Highest Qualification</label>
                   {{ p_form.qualification }}
+                  <div class="text-danger small">{{ p_form.qualification.errors }}</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Years of Experience</label>
+                  <label class="form-label fw-bold">Years of Experience</label>
                   {{ p_form.experience_years }}
+                  <div class="text-danger small">{{ p_form.experience_years.errors }}</div>
                 </div>
               </div>
             {% elif user.profile.user_type == 'Student' %}
               <h5 class="fw-bold mb-3" style="color: var(--primary-cyan);">Student Academic Details</h5>
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Enrollment Number</label>
+                  <label class="form-label fw-bold">Enrollment Number</label>
                   {{ p_form.enrollment_number }}
+                  <div class="text-danger small">{{ p_form.enrollment_number.errors }}</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Branch / Stream</label>
+                  <label class="form-label fw-bold">Branch / Stream</label>
                   {{ p_form.branch }}
+                  <div class="text-danger small">{{ p_form.branch.errors }}</div>
                 </div>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold" style="color: var(--text-dark);">College / University Name</label>
+                <label class="form-label fw-bold">College / University Name</label>
                 {{ p_form.college_name }}
+                <div class="text-danger small">{{ p_form.college_name.errors }}</div>
               </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Current Qualification</label>
+                  <label class="form-label fw-bold">Current Qualification</label>
                   {{ p_form.qualification }}
+                  <div class="text-danger small">{{ p_form.qualification.errors }}</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label fw-bold" style="color: var(--text-dark);">Date of Birth</label>
+                  <label class="form-label fw-bold">Date of Birth</label>
                   {{ p_form.date_of_birth }}
+                  <div class="text-danger small">{{ p_form.date_of_birth.errors }}</div>
                 </div>
               </div>
             {% endif %}
 
             <div class="mb-3 mt-4">
-              <label class="form-label fw-bold" style="color: var(--text-dark);">Bio</label>
+              <label class="form-label fw-bold">Bio</label>
               {{ p_form.bio }}
+              <div class="text-danger small">{{ p_form.bio.errors }}</div>
             </div>
 
             <div class="mt-4">
               <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Save Changes</button>
-              <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-link text-muted text-decoration-none ms-2">Cancel</a>
+              <a href="javascript:history.back()" class="btn btn-link text-muted text-decoration-none ms-2">Cancel</a>
             </div>
           </form>
         </div>

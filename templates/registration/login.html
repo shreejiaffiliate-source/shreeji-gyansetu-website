@@ -2,7 +2,7 @@
 {% block content %}
   {% load static %}
   <div class="container d-flex align-items-center justify-content-center pt-4" style="min-height: 80vh;">
-    <div class="card border-0 shadow-lg p-4" style="width: 100%; max-width: 450px; border-radius: 20px; background: var(--card-bg);">
+    <div class="card border-0 shadow-lg p-4" style="width: 100%; max-width: 450px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border-color);">
       <div class="text-center mb-4">
         <img src="{% static 'images/logo.png' %}" alt="Logo" height="60" class="mb-3" />
         <h3 class="fw-bold" style="color: var(--text-dark);">Welcome Back</h3>
@@ -33,20 +33,40 @@
         <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm mb-3 btn-enroll">Sign In <i class="fas fa-sign-in-alt ms-2"></i></button>
 
         <div class="text-center">
-          <a href="#" class="text-decoration-none small text-muted">Forgot password?</a>
+          <a href="#" class="text-decoration-none small text-muted fw-bold" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
           <hr class="my-4" style="border-color: var(--border-color); opacity: 0.2;" />
           <p class="small mb-0" style="color: var(--text-dark);">
             Don't have an account? <a href="{% url 'register' %}" class="fw-bold" style="color: var(--primary-cyan);">Register Now</a>
           </p>
         </div>
       </form>
+
       <div class="text-center mt-3">
         <p class="text-muted small">OR</p>
         {% load socialaccount %}
-        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark w-100 py-2 rounded-3 fw-bold">
+        <a href="{% provider_login_url 'google' %}" class="btn btn-google-custom border w-100 py-2 rounded-3 fw-bold" style="border-color: var(--border-color); color: var(--text-dark);">
           <img src="{% static 'images/google_logo.png' %}" alt="G" height="20" class="me-2" />
           Continue with Google
         </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color);">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" style="color: var(--text-dark);">Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: var(--close-btn-invert);"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p style="color: var(--text-muted);">Enter your email to receive a 6-digit verification code.</p>
+          <div class="mb-3">
+            <input type="email" id="forgot-email" class="form-control py-2" placeholder="name@example.com" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);" />
+          </div>
+          <div id="forgot-status" class="small mb-3"></div>
+          <button type="button" id="send-otp-btn" class="btn btn-primary w-100 fw-bold py-2" onclick="requestResetOtp()">Send OTP</button>
+        </div>
       </div>
     </div>
   </div>
@@ -63,6 +83,48 @@
       } else {
         input.type = 'password'
         icon.classList.replace('fa-eye-slash', 'fa-eye')
+      }
+    }
+    
+    async function requestResetOtp() {
+      const email = document.getElementById('forgot-email').value
+      const statusDiv = document.getElementById('forgot-status')
+      const btn = document.getElementById('send-otp-btn')
+    
+      if (!email) {
+        statusDiv.innerHTML = '<span class="text-danger">Please enter your email.</span>'
+        return
+      }
+    
+      btn.disabled = true
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...'
+    
+      try {
+        const response = await fetch("{% url 'api_resend_otp' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ email: email })
+        })
+    
+        const data = await response.json()
+    
+        if (response.ok) {
+          statusDiv.innerHTML = '<span class="text-success">OTP Sent! Redirecting...</span>'
+          setTimeout(() => {
+            window.location.href = `/verify-otp/?email=${encodeURIComponent(email)}&isPasswordReset=true`
+          }, 1000)
+        } else {
+          statusDiv.innerHTML = `<span class="text-danger">${data.error || 'User not found!'}</span>`
+          btn.disabled = false
+          btn.innerText = 'Send OTP'
+        }
+      } catch (error) {
+        statusDiv.innerHTML = '<span class="text-danger">Network Error!</span>'
+        btn.disabled = false
+        btn.innerText = 'Send OTP'
       }
     }
   </script>
