@@ -4,7 +4,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-y4z+pv#*#p9rg&(@*qaopp_4$s5^j02&_)pa(p-_ui+5&gl3&v"
 DEBUG = True
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "www.gyansetu.shreejifintech.com"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://www.gyansetu.shreejifintech.com"
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -172,3 +176,5 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # Isse login failure ka asli error message terminal mein dikhega
 SOCIALACCOUNT_ADAPTER = 'courses.adapters.MySocialAccountAdapter'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
